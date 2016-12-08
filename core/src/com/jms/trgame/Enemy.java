@@ -39,14 +39,17 @@ public class Enemy extends ScreenObject {
 
     //private Rectangle rect;
 
-    private int direction;
+    private TRGame.Direction direction;
     private float accDelta;
 
     private int speed = TRGame.ENEMY_WALK_SPEED;
+    private TRGame.Direction currentDirection = TRGame.Direction.LEFT;
 
     // -----------------------------------------------------------------------------------------------------------------
 
     public Enemy(TRGame game, int startX, int startY) {
+
+        super(startX, startY, TRGame.GHOST_WIDTH, TRGame.GHOST_HEIGHT);
 
         this.game = game;
 
@@ -77,13 +80,6 @@ public class Enemy extends ScreenObject {
         this.enemyTextureLeft  = walkFramesLeft[TRGame.FRAME_COLS/2];
         this.enemyTextureRight = walkFramesRight[TRGame.FRAME_COLS/2];
         this.enemyTexture = enemyTextureRight;
-
-
-        this.rect = new Rectangle();
-        this.rect.height = TRGame.GHOST_HEIGHT;
-        this.rect.width = TRGame.GHOST_WIDTH;
-        this.rect.x = startX - rect.width/2;
-        this.rect.y = startY - rect.height/2;
 
         changeDirection();
     }
@@ -117,10 +113,71 @@ public class Enemy extends ScreenObject {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public void move(Pacman player) {
+
+    @Override
+    public TRGame.Direction getDirection() {
+        return currentDirection;
+    }
+
+    @Override
+    public TRGame.Direction move(TRGame.Direction direction) {
+
+        if (allowedDirections.contains(direction)) {
+
+            float delta = Gdx.graphics.getDeltaTime();
+            float step = speed * delta;
+
+            switch (direction) {
+                case UP:
+                    rect.y += step;
+                    enemyTexture = enemyTextureUp;
+                    walkAnimation = walkAnimationUp;
+                    break;
+                case DOWN:
+                    rect.y -= step;
+                    enemyTexture = enemyTextureDown;
+                    walkAnimation = walkAnimationDown;
+                    break;
+                case LEFT:
+                    rect.x -= step;
+                    enemyTexture = enemyTextureLeft;
+                    walkAnimation = walkAnimationLeft;
+                    break;
+                case RIGHT:
+                    rect.x += step;
+                    enemyTexture = enemyTextureRight;
+                    walkAnimation = walkAnimationRight;
+                    break;
+            }
+
+            if (rect.x > TRGame.SCREEN_WIDTH - TRGame.GHOST_WIDTH) {
+                rect.x = TRGame.SCREEN_WIDTH - TRGame.GHOST_WIDTH;
+                changeDirection();
+            } else if (rect.x < 0) {
+                rect.x = 0;
+                changeDirection();
+            } else if (rect.y > TRGame.SCREEN_HEIGHT - TRGame.GHOST_HEIGHT) {
+                rect.y = TRGame.SCREEN_HEIGHT - TRGame.GHOST_HEIGHT;
+                changeDirection();
+            } else if (rect.y < 0) {
+                rect.y = 0;
+                changeDirection();
+            }
+
+            moving = true;
+            currentDirection = direction;
+
+        } else {
+            moving = false;
+        }
+
+        return currentDirection;
+    }
+
+    public TRGame.Direction move(Pacman player) {
 
         float delta = Gdx.graphics.getDeltaTime();
-        float step = speed * delta;
+        //float step = speed * delta;
         accDelta += delta;
 
         if (player.isAlive() && (distanceTo(player) <= TRGame.ENEMY_RANGE)) {
@@ -131,20 +188,20 @@ public class Enemy extends ScreenObject {
             double difX = this.getX() - player.getX();
             double difY = this.getY() - player.getY();
 
-            if ((accDelta > TRGame.ENEMY_WALK_DIR_CHANGE_TIME) &&
+            if ((accDelta > TRGame.ENEMY_RUN_DIR_CHANGE_TIME) &&
                     (Math.abs(difX) > TRGame.GHOST_WIDTH/2 || Math.abs(difY) > TRGame.GHOST_WIDTH/2) &&
                     (Math.max(Math.abs(difX),Math.abs(difY))/Math.min(Math.abs(difX),Math.abs(difY)) > 1.05)) {
 
                 if (Math.abs(difX) > Math.abs(difY)) {
                     if (difX > 0)
-                        direction = TRGame.DIRECTION_LEFT;
+                        direction = TRGame.Direction.LEFT;
                     else
-                        direction = TRGame.DIRECTION_RIGHT;
+                        direction = TRGame.Direction.RIGHT;
                 } else {
                     if (difY > 0)
-                        direction = TRGame.DIRECTION_DOWN;
+                        direction = TRGame.Direction.DOWN;
                     else
-                        direction = TRGame.DIRECTION_UP;
+                        direction = TRGame.Direction.UP;
                 }
 
                 accDelta = 0;
@@ -160,44 +217,7 @@ public class Enemy extends ScreenObject {
             }
         }
 
-        switch (direction) {
-            case TRGame.DIRECTION_UP :
-                rect.y += step;
-                enemyTexture = enemyTextureUp;
-                walkAnimation = walkAnimationUp;
-                break;
-            case TRGame.DIRECTION_DOWN :
-                rect.y -= step;
-                enemyTexture = enemyTextureDown;
-                walkAnimation = walkAnimationDown;
-                break;
-            case TRGame.DIRECTION_LEFT :
-                rect.x -= step;
-                enemyTexture = enemyTextureLeft;
-                walkAnimation = walkAnimationLeft;
-                break;
-            case TRGame.DIRECTION_RIGHT :
-                rect.x += step;
-                enemyTexture = enemyTextureRight;
-                walkAnimation = walkAnimationRight;
-                break;
-        }
-
-        if (rect.x > TRGame.SCREEN_WIDTH - TRGame.GHOST_WIDTH) {
-            rect.x = TRGame.SCREEN_WIDTH - TRGame.GHOST_WIDTH;
-            changeDirection();
-        } else if (rect.x < 0) {
-            rect.x = 0;
-            changeDirection();
-        } else if (rect.y > TRGame.SCREEN_HEIGHT - TRGame.GHOST_HEIGHT) {
-            rect.y = TRGame.SCREEN_HEIGHT - TRGame.GHOST_HEIGHT;
-            changeDirection();
-        } else if (rect.y < 0) {
-            rect.y = 0;
-            changeDirection();
-        }
-
-        moving = true;
+        return move(direction);
     }
 
     // -----------------------------------------------------------------------------------------------------------------

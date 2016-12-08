@@ -37,11 +37,16 @@ public class Pacman extends ScreenObject {
     private Boolean moving = false;
     private Boolean alive  = true;
 
+    private TRGame.Direction currentDirection = TRGame.Direction.LEFT;
+    private float accDelta = 0;
+
     //private Rectangle rect;
 
     // -----------------------------------------------------------------------------------------------------------------
 
     public Pacman(TRGame game, int startX, int startY) {
+
+        super(startX, startY, TRGame.PACMAN_WIDTH, TRGame.PACMAN_HEIGHT);
 
         this.game = game;
 
@@ -73,12 +78,6 @@ public class Pacman extends ScreenObject {
         this.manTextureRight = walkFramesRight[TRGame.FRAME_COLS/2];
         this.manTexture = manTextureRight;
 
-        this.rect = new Rectangle();
-        this.rect.height = TRGame.PACMAN_HEIGHT;
-        this.rect.width  = TRGame.PACMAN_WIDTH;
-        this.rect.x = startX - rect.width/2;
-        this.rect.y = startY - rect.height/2;
-
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -104,102 +103,99 @@ public class Pacman extends ScreenObject {
 
     public void dontMove() {
         moving = false;
+        accDelta = 0;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public void move(int direction) {
-
-        float step = TRGame.MAN_SPEED * Gdx.graphics.getDeltaTime();
-
-        switch (direction) {
-            case TRGame.DIRECTION_UP :
-                rect.y += step;
-                manTexture = manTextureUp;
-                walkAnimation = walkAnimationUp;
-                break;
-            case TRGame.DIRECTION_DOWN :
-                rect.y -= step;
-                manTexture = manTextureDown;
-                walkAnimation = walkAnimationDown;
-                break;
-            case TRGame.DIRECTION_LEFT :
-                rect.x -= step;
-                manTexture = manTextureLeft;
-                walkAnimation = walkAnimationLeft;
-                break;
-            case TRGame.DIRECTION_RIGHT :
-                rect.x += step;
-                manTexture = manTextureRight;
-                walkAnimation = walkAnimationRight;
-                break;
-        }
-
-        if (rect.x > TRGame.SCREEN_WIDTH - TRGame.PACMAN_WIDTH)
-            rect.x = TRGame.SCREEN_WIDTH - TRGame.PACMAN_WIDTH;
-        else if (rect.x < 0)
-            rect.x = 0;
-        else if (rect.y > TRGame.SCREEN_HEIGHT - TRGame.PACMAN_HEIGHT)
-            rect.y = TRGame.SCREEN_HEIGHT - TRGame.PACMAN_HEIGHT;
-        else if (rect.y < 0)
-        rect.y = 0;
-
-        moving = true;
+    @Override
+    public TRGame.Direction getDirection() {
+        return currentDirection;
     }
 
-    public void move(float x, float y) {
+    @Override
+    public TRGame.Direction move(TRGame.Direction direction) {
+
+        if (allowedDirections.contains(direction)) {
+
+            float step = TRGame.MAN_SPEED * Gdx.graphics.getDeltaTime();
+
+            switch (direction) {
+                case UP:
+                    rect.y += step;
+                    manTexture = manTextureUp;
+                    walkAnimation = walkAnimationUp;
+                    break;
+                case DOWN:
+                    rect.y -= step;
+                    manTexture = manTextureDown;
+                    walkAnimation = walkAnimationDown;
+                    break;
+                case LEFT:
+                    rect.x -= step;
+                    manTexture = manTextureLeft;
+                    walkAnimation = walkAnimationLeft;
+                    break;
+                case RIGHT:
+                    rect.x += step;
+                    manTexture = manTextureRight;
+                    walkAnimation = walkAnimationRight;
+                    break;
+            }
+
+            if (rect.x > TRGame.SCREEN_WIDTH - TRGame.PACMAN_WIDTH)
+                rect.x = TRGame.SCREEN_WIDTH - TRGame.PACMAN_WIDTH;
+            else if (rect.x < 0)
+                rect.x = 0;
+            else if (rect.y > TRGame.SCREEN_HEIGHT - TRGame.PACMAN_HEIGHT)
+                rect.y = TRGame.SCREEN_HEIGHT - TRGame.PACMAN_HEIGHT;
+            else if (rect.y < 0)
+                rect.y = 0;
+
+            moving = true;
+            currentDirection = direction;
+
+        } else {
+            moving = false;
+        }
+        return currentDirection;
+    }
+
+    public TRGame.Direction move(float x, float y) {
 
         double difX = this.getX() - x;
         double difY = this.getY() - y;
 
-        int newDirection = 0;
+        TRGame.Direction newDirection = currentDirection;
 
-        if (Math.abs(difX) > TRGame.PACMAN_WIDTH || Math.abs(difY) > TRGame.PACMAN_WIDTH) {
+        if ((Math.abs(difX) > TRGame.PACMAN_WIDTH || Math.abs(difY) > TRGame.PACMAN_WIDTH) &&
+                (Math.max(Math.abs(difX),Math.abs(difY))/Math.min(Math.abs(difX),Math.abs(difY)) > 0)) {
 
-            if (Math.max(Math.abs(difX),Math.abs(difY))/Math.min(Math.abs(difX),Math.abs(difY)) > 1.05) {
+            float delta = Gdx.graphics.getDeltaTime();
+            accDelta -= delta;
 
+            if (accDelta <= 0) {
                 if (Math.abs(difX) > Math.abs(difY)) {
                     if (difX > 0)
-                        newDirection = TRGame.DIRECTION_LEFT;
+                        newDirection = TRGame.Direction.LEFT;
                     else
-                        newDirection = TRGame.DIRECTION_RIGHT;
+                        newDirection = TRGame.Direction.RIGHT;
                 } else {
                     if (difY > 0)
-                        newDirection = TRGame.DIRECTION_DOWN;
+                        newDirection = TRGame.Direction.DOWN;
                     else
-                        newDirection = TRGame.DIRECTION_UP;
+                        newDirection = TRGame.Direction.UP;
 
                 }
-
-                move(newDirection);
+                accDelta = 0.25f;
             }
+
+            currentDirection = move(newDirection);
         } else {
             moving = false;
         }
 
-        /*
-        double vectorL = Math.sqrt(Math.pow(difX, 2) + Math.pow(difY, 2));
-        double ratio = TRGame.MAN_SPEED/vectorL;
-
-        float delta = Gdx.graphics.getDeltaTime();
-
-        if (Math.abs(difX) >= TRGame.PACMAN_WIDTH)
-            rect.x -= difX * ratio * delta;
-        if (Math.abs(difY) >= TRGame.PACMAN_HEIGHT)
-            rect.y -= difY * ratio * delta;
-
-        if (Math.abs(difX) > Math.abs(difY)) {
-            if (difX > 0)
-                manTexture = manTextureLeft;
-            else
-                manTexture = manTextureRight;
-        } else {
-            if (difY > 0)
-                manTexture = manTextureDown;
-            else
-                manTexture = manTextureUp;
-        }
-        */
+        return currentDirection;
     }
 
     public boolean isAlive() {

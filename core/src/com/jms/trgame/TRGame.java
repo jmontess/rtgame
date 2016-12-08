@@ -22,16 +22,19 @@ public class TRGame extends Game {
     public static final int GHOST_WIDTH   = 64*SCREEN_SCALE;
     public static final int GHOST_HEIGHT  = 64*SCREEN_SCALE;
 
+    public static final int OBSTACLE_WIDTH   = 48*SCREEN_SCALE;
+    public static final int OBSTACLE_HEIGHT  = 48*SCREEN_SCALE;
+
     public static final int CHEESE_WIDTH   = 48*SCREEN_SCALE;
     public static final int CHEESE_HEIGHT  = 48*SCREEN_SCALE;
 
-    public static final int MAN_SPEED = 300*SCREEN_SCALE;
-    public static final int ENEMY_WALK_SPEED = 100*SCREEN_SCALE;
-    public static final int ENEMY_RUN_SPEED  = 150*SCREEN_SCALE;
+    public static final int MAN_SPEED = 150*SCREEN_SCALE;
+    public static final int ENEMY_WALK_SPEED = 50*SCREEN_SCALE;
+    public static final int ENEMY_RUN_SPEED  = 100*SCREEN_SCALE;
 
     public static final int ENEMY_RANGE = 200*SCREEN_SCALE;
 
-    public static final String TEXTURE_FLOOR_PATH = "floor.png";
+    public static final String TEXTURE_FLOOR_PATH = "floor_plain.png";
 
     public static final int FRAME_COLS = 3;
     public static final int FRAME_ROWS = 4;
@@ -40,14 +43,20 @@ public class TRGame extends Game {
     public static final String MAN_SPRITES_PATH = "man.png";
     public static final String ENEMY_SPRITES_PATH = "dragon.png";
     public static final String CHEESE_TEXTURE_PATH = "cheese.png";
-
-    public static final int DIRECTION_UP    = 1;
-    public static final int DIRECTION_DOWN  = 2;
-    public static final int DIRECTION_LEFT  = 3;
-    public static final int DIRECTION_RIGHT = 4;
+    public static final String OBSTACLE_TEXTURE_PATH = "obstacle.png";
 
     public static final float ENEMY_WALK_DIR_CHANGE_TIME = 1.5f;
-    public static final float ENEMY_RUN_DIR_CHANGE_TIME = 0.5f;
+    public static final float ENEMY_RUN_DIR_CHANGE_TIME = 0.25f;
+
+    public enum Direction {
+        UP, DOWN, LEFT, RIGHT, NONE
+    }
+    /*
+    public static final Direction DIRECTION_UP    = Direction.UP;
+    public static final Direction DIRECTION_DOWN  = Direction.DOWN;
+    public static final Direction DIRECTION_LEFT  = Direction.LEFT;
+    public static final Direction DIRECTION_RIGHT = Direction.RIGHT;
+    */
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -81,7 +90,27 @@ public class TRGame extends Game {
         return spriteBatch;
     }
 
-    public int getRandomDirection() {
-        return MathUtils.random(1,4);
+    // -----------------------------------------------------------------------------------------------------------------
+
+    public TRGame.Direction getRandomDirection() {
+        int d = MathUtils.random(1,4);
+        Direction result = Direction.NONE;
+        switch (d) {
+            case 1 :
+                result = Direction.UP;
+                break;
+            case 2 :
+                result = Direction.DOWN;
+                break;
+            case 3 :
+                result = Direction.LEFT;
+                break;
+            case 4 :
+                result = Direction.RIGHT;
+                break;
+            default :
+                result = Direction.NONE;
+        }
+        return result;
     }
 }

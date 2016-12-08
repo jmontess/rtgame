@@ -29,7 +29,8 @@ public class GameScreen implements Screen {
     private Pacman pacman;
     private Enemy enemy;
 
-    private ArrayList<Cheese> cheese;
+    private ArrayList<ScreenObject> cheese;
+    private ArrayList<ScreenObject> obstacles;
 
     private ArrayList<ScreenObject> screenObjects;
 
@@ -55,15 +56,11 @@ public class GameScreen implements Screen {
         // Creating Enemy
         enemy = new Enemy(game, (int)(TRGame.SCREEN_WIDTH*0.75), (int)(TRGame.SCREEN_HEIGHT*0.75));
 
+        // Creating Obstacles
+        generateObstacles(15);
+
         // Creating Cheese
-        cheese = new ArrayList<Cheese>();
-        for (int i = 0; i < 3; i++) {
-            cheese.add(
-                    new Cheese(
-                            game,
-                            MathUtils.random(TRGame.CHEESE_WIDTH, TRGame.SCREEN_WIDTH - TRGame.CHEESE_WIDTH),
-                            MathUtils.random(TRGame.CHEESE_HEIGHT, TRGame.SCREEN_HEIGHT - TRGame.CHEESE_HEIGHT)));
-        }
+        generateCheese(3);
 
         screenObjects = generateScreenObjectsList();
 
@@ -98,33 +95,38 @@ public class GameScreen implements Screen {
 
         // Move enemy
         if (pacman.isAlive()) {
+            enemy.setAllowedDirections(allowedDirections(enemy));
             enemy.move(pacman);
+            fixPosition(enemy, enemy.getDirection());
         }
 
         // Process input
         if (pacman.isAlive()) {
+            pacman.setAllowedDirections(allowedDirections(pacman));
             if (Gdx.input.isTouched()) {
                 Vector3 touchPos = new Vector3();
                 touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
                 camera.unproject(touchPos);
                 pacman.move(touchPos.x, touchPos.y);
             } else if (Gdx.input.isKeyPressed(Input.Keys.UP))
-                pacman.move(TRGame.DIRECTION_UP);
+                pacman.move(TRGame.Direction.UP);
             else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-                pacman.move(TRGame.DIRECTION_DOWN);
+                pacman.move(TRGame.Direction.DOWN);
             else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-                pacman.move(TRGame.DIRECTION_LEFT);
+                pacman.move(TRGame.Direction.LEFT);
             else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-                pacman.move(TRGame.DIRECTION_RIGHT);
+                pacman.move(TRGame.Direction.RIGHT);
             else
                 pacman.dontMove();
         }
+
+        fixPosition(pacman, pacman.getDirection());
 
         // Check for interaction events
         boolean objectsChanged = false;
         int cheesePos = 0;
         while (cheesePos < cheese.size()) {
-            Cheese c = cheese.get(cheesePos);
+            Cheese c = (Cheese) cheese.get(cheesePos);
             if (c.checkInteraction(pacman)) {
                 objectsChanged = true;
                 biteSound.play();
@@ -172,7 +174,10 @@ public class GameScreen implements Screen {
         floorTexture.dispose();
         pacman.dispose();
         enemy.dispose();
-        for (Cheese c : cheese) {
+        for (ScreenObject o : obstacles) {
+            o.dispose();
+        }
+        for (ScreenObject c : cheese) {
             c.dispose();
         }
     }
@@ -185,14 +190,107 @@ public class GameScreen implements Screen {
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    private void generateObstacles(int numObstacles) {
+        obstacles = new ArrayList<ScreenObject>();
+        while (obstacles.size() < numObstacles) {
+            int obstacleX = MathUtils.random(TRGame.OBSTACLE_WIDTH, TRGame.SCREEN_WIDTH - TRGame.OBSTACLE_WIDTH);
+            int obstacleY = MathUtils.random(TRGame.OBSTACLE_HEIGHT, TRGame.SCREEN_HEIGHT - TRGame.OBSTACLE_HEIGHT);
+            Obstacle newObstacle = new Obstacle(game, obstacleX, obstacleY);
+            Obstacle newObstacle2 = null;
+            if (MathUtils.random(0,1) == 0)
+                newObstacle2 = new Obstacle(game, obstacleX + TRGame.OBSTACLE_WIDTH, obstacleY);
+            else
+                newObstacle2 = new Obstacle(game, obstacleX, obstacleY + TRGame.OBSTACLE_HEIGHT);
+            if (!newObstacle.overlaps(obstacles) && !newObstacle2.overlaps(obstacles)) {
+                obstacles.add(newObstacle);
+                obstacles.add(newObstacle2);
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private void generateCheese(int numCheese) {
+        cheese = new ArrayList<ScreenObject>();
+        while (cheese.size() < numCheese) {
+            Cheese newCheeseObj = new Cheese(
+                    game,
+                    MathUtils.random(TRGame.CHEESE_WIDTH, TRGame.SCREEN_WIDTH - TRGame.CHEESE_WIDTH),
+                    MathUtils.random(TRGame.CHEESE_HEIGHT, TRGame.SCREEN_HEIGHT - TRGame.CHEESE_HEIGHT));
+            if (!newCheeseObj.overlaps(cheese) && !newCheeseObj.overlaps(obstacles))
+                cheese.add(newCheeseObj);
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
     private ArrayList<ScreenObject> generateScreenObjectsList() {
         ArrayList<ScreenObject> result = new ArrayList<ScreenObject>();
         result.add(pacman);
         result.add(enemy);
-        for (Cheese c : cheese) result.add(c);
+        result.addAll(cheese);
+        result.addAll(obstacles);
         return result;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
 
+    private ArrayList<TRGame.Direction> allowedDirections(ScreenObject target) {
+
+        boolean allowedUp    = true;
+        boolean allowedDown  = true;
+        boolean allowedLeft  = true;
+        boolean allowedRight = true;
+
+        for (ScreenObject o : obstacles) {
+            //if (o.overlaps(target)) System.out.println("Overlaps! "+o.getLeftX()+" "+target.getRightX()+" "+(o.getLeftX() < target.getRightX())+" "+allowedRight);
+
+            if (allowedUp && o.overlaps(target) && (o.getBottomY() > target.getBottomY())) {
+                allowedUp = false;
+            }
+            if (allowedDown && o.overlaps(target) && (o.getBottomY() < target.getBottomY())) {
+                allowedDown = false;
+            }
+            if (allowedRight && o.overlaps(target) && (o.getX() > target.getX())  && (o.getLeftX() < target.getRightX())) {
+                //System.out.println("yeah!");
+                allowedRight = false;
+            }
+            if (allowedLeft && o.overlaps(target) && (o.getX() < target.getX()) && (o.getRightX() > target.getLeftX())) {
+                allowedLeft = false;
+            }
+        }
+
+        ArrayList<TRGame.Direction> result = new ArrayList<TRGame.Direction>();
+        if (allowedUp)    result.add(TRGame.Direction.UP);
+        if (allowedDown)  result.add(TRGame.Direction.DOWN);
+        if (allowedLeft)  result.add(TRGame.Direction.LEFT);
+        if (allowedRight) result.add(TRGame.Direction.RIGHT);
+
+        return result;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private void fixPosition(ScreenObject target, TRGame.Direction lastMove) {
+        for (ScreenObject o : obstacles) {
+            //if (o.overlaps(target)) System.out.println("Overlaps! "+o.getLeftX()+" "+target.getRightX()+" "+(o.getLeftX() < target.getRightX())+" "+allowedRight);
+
+            if ((lastMove == TRGame.Direction.UP) && o.overlaps(target) && (o.getBottomY() > target.getBottomY())) {
+                target.rect.y = (float)(o.getBottomY() - target.rect.height);
+            }
+            if ((lastMove == TRGame.Direction.DOWN) && o.overlaps(target) && (o.getBottomY() < target.getBottomY())) {
+                target.rect.y = (float)o.getTopY();
+            }
+            if ((lastMove == TRGame.Direction.RIGHT) && o.overlaps(target) && (o.getX() > target.getX())  && (o.getLeftX() < target.getRightX())) {
+                //allowedRight = false;
+                target.rect.x = (float)o.getLeftX() - target.rect.width;
+            }
+            if ((lastMove == TRGame.Direction.LEFT) && o.overlaps(target) && (o.getX() < target.getX()) && (o.getRightX() > target.getLeftX())) {
+                //allowedLeft = false;
+                target.rect.x = (float)o.getRightX();
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
 }
