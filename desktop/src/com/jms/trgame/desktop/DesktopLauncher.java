@@ -6,12 +6,10 @@ import com.jms.trgame.TRGame;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {
-		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.title = TRGame.GAME_TITLE;
-		//config.x = TRGame.SCREEN_WIDTH;
-		//config.y = TRGame.SCREEN_HEIGHT;
-        config.width = TRGame.SCREEN_WIDTH;
-        config.height = TRGame.SCREEN_HEIGHT;
-		new LwjglApplication(new TRGame(), config);
+	    LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+	    config.title = TRGame.GAME_TITLE;
+	    config.width = TRGame.SCREEN_WIDTH;
+	    config.height = TRGame.SCREEN_HEIGHT;
+	    new LwjglApplication(new TRGame(), config);
 	}
 }
