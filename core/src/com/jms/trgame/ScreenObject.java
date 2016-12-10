@@ -1,88 +1,111 @@
 package com.jms.trgame;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 
-import java.util.ArrayList;
-
 /**
- * Created by jmontes on 6/12/16.
+ * Created by jmontes on 9/12/16.
  */
-public abstract class ScreenObject implements Comparable<ScreenObject> {
+public class ScreenObject {
 
+    protected TRGame game;
+    protected Board board;
     protected Rectangle rect;
-    protected ArrayList<TRGame.Direction> allowedDirections;
+    protected Texture objectTexture;
+    protected boolean moving = false;
+    protected Direction direction = Direction.NONE;
+    protected int speed = TRGame.OBJECT_SPEED;
+    protected float distanceMoved = 0;
 
-    public ScreenObject(int startX, int startY, int width, int height) {
+    public ScreenObject(TRGame game, Board board, Position pos) {
+
+        this.game = game;
+        this.board = board;
 
         this.rect = new Rectangle();
-        this.rect.height = height;
-        this.rect.width  = width;
-        this.rect.x = startX - rect.width/2;
-        this.rect.y = startY - rect.height/2;
-
-        this.allowedDirections = new ArrayList<TRGame.Direction>();
+        this.rect.width  = TRGame.GRID_CELL_SIDE;
+        this.rect.height = TRGame.GRID_CELL_SIDE;
+        this.rect.x = pos.x * TRGame.GRID_CELL_SIDE;
+        this.rect.y = pos.y * TRGame.GRID_CELL_SIDE;
     }
 
-    public int position() {
-        return (int)rect.y;
+    public void setTexture(String texturePath) {
+        this.objectTexture = new Texture(Gdx.files.internal(texturePath));
     }
 
-    public int compareTo(ScreenObject o) {
-        return this.position() - o.position();
+    public void draw() {
+        updatePosition();
+        if (objectTexture != null) {
+            game.getSpriteBatch().draw(objectTexture, rect.x, rect.y, rect.width, rect.height);
+        }
     }
 
-    public double distanceTo(ScreenObject o) {
-        return Math.sqrt(Math.pow(this.rect.x - o.rect.x, 2) + Math.pow(this.rect.y - o.rect.y, 2));
+    public void move(Direction dir) {
+        if (!moving && (dir != Direction.NONE)) {
+            Position nextPos = getCurrentPosition();
+            switch (dir) {
+                case UP:
+                    nextPos.y++;
+                    break;
+                case DOWN:
+                    nextPos.y--;
+                    break;
+                case LEFT:
+                    nextPos.x--;
+                    break;
+                case RIGHT:
+                    nextPos.x++;
+                    break;
+            }
+            if (board.isEmpty(nextPos)) {
+                moving = true;
+                direction = dir;
+            }
+        }
     }
 
-    public double getX() {
-        return rect.x + rect.height/2;
+    public Position getCurrentPosition() {
+        return new Position((int)Math.round(rect.x/TRGame.GRID_CELL_SIDE), (int)Math.round(rect.y/TRGame.GRID_CELL_SIDE));
     }
 
-    public double getY() {
-        return rect.y + rect.width/2;
-    }
-
-    public double getLeftX() {
-        return rect.x;
-    }
-
-    public double getRightX() {
-        return rect.x + rect.width;
-    }
-
-    public double getTopY() {
-        return rect.y + rect.height;
-    }
-
-    public double getBottomY() {
-        return rect.y;
-    }
-
-    public double getRadius() {
-        return (rect.width + rect.height) / 4;
+    public boolean isMoving() {
+        return moving;
     }
 
     public boolean overlaps(ScreenObject o) {
         return this.rect.overlaps(o.rect);
     }
 
-    public boolean overlaps(ArrayList<ScreenObject> objs){
+    public double distanceTo(ScreenObject o) {
+        return this.getCurrentPosition().distanceTo(o.getCurrentPosition());
+    }
 
-        for (ScreenObject o : objs) {
-            if (this.overlaps(o))
-                return true;
+    private void updatePosition() {
+        if (moving) {
+            float timeDelta = Gdx.graphics.getDeltaTime();
+            float step = Math.min(timeDelta * speed, (TRGame.GRID_CELL_SIDE - distanceMoved));
+            switch (direction) {
+                case UP:
+                    rect.y += step;
+                    break;
+                case DOWN:
+                    rect.y -= step;
+                    break;
+                case LEFT:
+                    rect.x -= step;
+                    break;
+                case RIGHT:
+                    rect.x += step;
+                    break;
+            }
+            distanceMoved += step;
+            if (distanceMoved >= TRGame.GRID_CELL_SIDE) {
+                moving = false;
+                distanceMoved = 0;
+                //System.out.println(this.getCurrentPosition());
+            }
         }
-        return false;
     }
-
-    public void setAllowedDirections(ArrayList<TRGame.Direction> ad) {
-        allowedDirections = ad;
-    }
-
-    public abstract void draw();
-    public abstract TRGame.Direction move(TRGame.Direction direction);
-    public abstract TRGame.Direction getDirection();
-    public abstract void dispose();
 }
-

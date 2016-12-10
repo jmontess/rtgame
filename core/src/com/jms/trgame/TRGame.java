@@ -3,7 +3,6 @@ package com.jms.trgame;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 
 public class TRGame extends Game {
 
@@ -14,49 +13,54 @@ public class TRGame extends Game {
 
     public static final int SCREEN_SCALE  = 4;
     public static final int SCREEN_WIDTH  = 640*SCREEN_SCALE;
-    public static final int SCREEN_HEIGHT = 360*SCREEN_SCALE;
+    public static final int SCREEN_HEIGHT = 384*SCREEN_SCALE;
 
-    public static final int PACMAN_WIDTH  = 64*SCREEN_SCALE;
-    public static final int PACMAN_HEIGHT = 64*SCREEN_SCALE;
+    public static final int GRID_CELL_SIDE = 64*SCREEN_SCALE;
 
-    public static final int GHOST_WIDTH   = 64*SCREEN_SCALE;
-    public static final int GHOST_HEIGHT  = 64*SCREEN_SCALE;
+    public static final String TEXTURE_FLOOR_PATH         = "floor_plain.png";
+    public static final String TEXTURE_GREEN_BOX_PATH     = "green_box.png";
+    public static final String TEXTURE_RED_BOX_PATH       = "red_box.png";
+    public static final String TEXTURE_RED_BOX_ALERT_PATH = "red_box_alert.png";
+    public static final String TEXTURE_YELLOW_BOX_PATH    = "yellow_box.png";
+    public static final String TEXTURE_GREY_BOX_PATH      = "grey_box.png";
 
-    public static final int OBSTACLE_WIDTH   = 48*SCREEN_SCALE;
-    public static final int OBSTACLE_HEIGHT  = 48*SCREEN_SCALE;
+    public static final String TEXTURE_PLAYER_WALK_UP_1_PATH = "player/up/1.png";
+    public static final String TEXTURE_PLAYER_WALK_UP_2_PATH = "player/up/2.png";
+    public static final String TEXTURE_PLAYER_WALK_DOWN_1_PATH = "player/down/1.png";
+    public static final String TEXTURE_PLAYER_WALK_DOWN_2_PATH = "player/down/2.png";
+    public static final String TEXTURE_PLAYER_WALK_LEFT_1_PATH = "player/left/1.png";
+    public static final String TEXTURE_PLAYER_WALK_LEFT_2_PATH = "player/left/2.png";
+    public static final String TEXTURE_PLAYER_WALK_RIGHT_1_PATH = "player/right/1.png";
+    public static final String TEXTURE_PLAYER_WALK_RIGHT_2_PATH = "player/right/2.png";
 
-    public static final int CHEESE_WIDTH   = 48*SCREEN_SCALE;
-    public static final int CHEESE_HEIGHT  = 48*SCREEN_SCALE;
+    public static final String TEXTURE_PLAYER_TAIL_WALK_UP_1_PATH = "player/up/1t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_UP_2_PATH = "player/up/2t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_DOWN_1_PATH = "player/down/1t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_DOWN_2_PATH = "player/down/2t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_LEFT_1_PATH = "player/left/1t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_LEFT_2_PATH = "player/left/2t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_RIGHT_1_PATH = "player/right/1t.png";
+    public static final String TEXTURE_PLAYER_TAIL_WALK_RIGHT_2_PATH = "player/right/2t.png";
 
-    public static final int MAN_SPEED = 150*SCREEN_SCALE;
-    public static final int ENEMY_WALK_SPEED = 50*SCREEN_SCALE;
-    public static final int ENEMY_RUN_SPEED  = 100*SCREEN_SCALE;
+    public static final String TEXTURE_ENEMY_WALK_UP_1_PATH = "enemy/up/1.png";
+    public static final String TEXTURE_ENEMY_WALK_UP_2_PATH = "enemy/up/2.png";
+    public static final String TEXTURE_ENEMY_WALK_DOWN_1_PATH = "enemy/down/1.png";
+    public static final String TEXTURE_ENEMY_WALK_DOWN_2_PATH = "enemy/down/2.png";
+    public static final String TEXTURE_ENEMY_WALK_LEFT_1_PATH = "enemy/left/1.png";
+    public static final String TEXTURE_ENEMY_WALK_LEFT_2_PATH = "enemy/left/2.png";
+    public static final String TEXTURE_ENEMY_WALK_RIGHT_1_PATH = "enemy/right/1.png";
+    public static final String TEXTURE_ENEMY_WALK_RIGHT_2_PATH = "enemy/right/2.png";
 
-    public static final int ENEMY_RANGE = 200*SCREEN_SCALE;
+    public static final String TEXTURE_CHEESE_PATH = "cheese.png";
 
-    public static final String TEXTURE_FLOOR_PATH = "floor_plain.png";
 
-    public static final int FRAME_COLS = 3;
-    public static final int FRAME_ROWS = 4;
-    public static final float ANIMATION_DURATION = 0.25f;
+    public static final int OBJECT_SPEED = 150*SCREEN_SCALE;
+    public static final int ENEMY_SPEED = 75*SCREEN_SCALE;
 
-    public static final String MAN_SPRITES_PATH = "man.png";
-    public static final String ENEMY_SPRITES_PATH = "dragon.png";
-    public static final String CHEESE_TEXTURE_PATH = "cheese.png";
-    public static final String OBSTACLE_TEXTURE_PATH = "obstacle.png";
+    public static final double ENEMY_ALERT_RANGE = 3.5;
 
-    public static final float ENEMY_WALK_DIR_CHANGE_TIME = 1.5f;
-    public static final float ENEMY_RUN_DIR_CHANGE_TIME = 0.25f;
-
-    public enum Direction {
-        UP, DOWN, LEFT, RIGHT, NONE
-    }
-    /*
-    public static final Direction DIRECTION_UP    = Direction.UP;
-    public static final Direction DIRECTION_DOWN  = Direction.DOWN;
-    public static final Direction DIRECTION_LEFT  = Direction.LEFT;
-    public static final Direction DIRECTION_RIGHT = Direction.RIGHT;
-    */
+    public static final float ENEMY_ANIMATION_FRAME_DURATION = 0.3f;
+    public static final float PLAYER_ANIMATION_FRAME_DURATION = 0.15f;
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -92,25 +96,4 @@ public class TRGame extends Game {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public TRGame.Direction getRandomDirection() {
-        int d = MathUtils.random(1,4);
-        Direction result = Direction.NONE;
-        switch (d) {
-            case 1 :
-                result = Direction.UP;
-                break;
-            case 2 :
-                result = Direction.DOWN;
-                break;
-            case 3 :
-                result = Direction.LEFT;
-                break;
-            case 4 :
-                result = Direction.RIGHT;
-                break;
-            default :
-                result = Direction.NONE;
-        }
-        return result;
-    }
 }

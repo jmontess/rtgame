@@ -2,12 +2,11 @@ package com.jms.trgame;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Rectangle;
 
 /**
  * Created by jmontes on 6/12/16.
  */
-public class Obstacle extends ScreenObject {
+public class Obstacle extends OldScreenObject {
 
     private TRGame game;
 

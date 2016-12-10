@@ -4,229 +4,133 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
 
 /**
- * Created by jmontes on 27/11/16.
+ * Created by jmontes on 9/12/16.
  */
 public class Enemy extends ScreenObject {
 
-    // -----------------------------------------------------------------------------------------------------------------
+    private Texture textureBase;
+    private Texture textureAlert;
 
-    private TRGame game;
+    TextureRegion[] framesUp;
+    TextureRegion[] framesDown;
+    TextureRegion[] framesLeft;
+    TextureRegion[] framesRight;
 
-    private TextureRegion enemyTexture;
-    private TextureRegion enemyTextureUp;
-    private TextureRegion enemyTextureDown;
-    private TextureRegion enemyTextureLeft;
-    private TextureRegion enemyTextureRight;
-
-    private Texture         walkSheet;
-    private TextureRegion[] walkFramesUp;
-    private TextureRegion[] walkFramesDown;
-    private TextureRegion[] walkFramesLeft;
-    private TextureRegion[] walkFramesRight;
-    private Animation       walkAnimationUp;
-    private Animation       walkAnimationDown;
-    private Animation       walkAnimationLeft;
-    private Animation       walkAnimationRight;
-    private Animation       walkAnimation;
+    private Animation walkAnimationUp;
+    private Animation walkAnimationDown;
+    private Animation walkAnimationLeft;
+    private Animation walkAnimationRight;
+    private Animation walkAnimation;
 
     private float stateTime = 0.0f;
 
-    private Boolean moving = true;
-    private Boolean pursuing = false;
+    private boolean alert = false;
+    private Direction playerDirection = Direction.NONE;
 
-    //private Rectangle rect;
+    public Enemy(TRGame game, Board board, Position pos) {
 
-    private TRGame.Direction direction;
-    private float accDelta;
+        super(game, board, pos);
 
-    private int speed = TRGame.ENEMY_WALK_SPEED;
-    private TRGame.Direction currentDirection = TRGame.Direction.LEFT;
+        textureBase = new Texture(Gdx.files.internal(TRGame.TEXTURE_RED_BOX_PATH));
+        textureAlert = new Texture(Gdx.files.internal(TRGame.TEXTURE_RED_BOX_ALERT_PATH));
 
-    // -----------------------------------------------------------------------------------------------------------------
+        objectTexture = textureBase;
 
-    public Enemy(TRGame game, int startX, int startY) {
+        speed = TRGame.ENEMY_SPEED;
 
-        super(startX, startY, TRGame.GHOST_WIDTH, TRGame.GHOST_HEIGHT);
+        framesUp = new TextureRegion[2];
+        framesUp[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_UP_1_PATH)));
+        framesUp[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_UP_2_PATH)));
+        walkAnimationUp = new Animation(TRGame.ENEMY_ANIMATION_FRAME_DURATION, framesUp);
 
-        this.game = game;
+        framesDown = new TextureRegion[2];
+        framesDown[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_DOWN_1_PATH)));
+        framesDown[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_DOWN_2_PATH)));
+        walkAnimationDown = new Animation(TRGame.ENEMY_ANIMATION_FRAME_DURATION, framesDown);
 
-        walkSheet = new Texture(Gdx.files.internal(TRGame.ENEMY_SPRITES_PATH));
-        TextureRegion[][] tmp = TextureRegion.split(
-                walkSheet, walkSheet.getWidth()/TRGame.FRAME_COLS,
-                walkSheet.getHeight()/TRGame.FRAME_ROWS);
+        framesLeft = new TextureRegion[2];
+        framesLeft[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_LEFT_1_PATH)));
+        framesLeft[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_LEFT_2_PATH)));
+        walkAnimationLeft = new Animation(TRGame.ENEMY_ANIMATION_FRAME_DURATION, framesLeft);
 
-        walkFramesUp    = new TextureRegion[TRGame.FRAME_COLS];
-        walkFramesDown  = new TextureRegion[TRGame.FRAME_COLS];
-        walkFramesLeft  = new TextureRegion[TRGame.FRAME_COLS];
-        walkFramesRight = new TextureRegion[TRGame.FRAME_COLS];
+        framesRight = new TextureRegion[2];
+        framesRight[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_RIGHT_1_PATH)));
+        framesRight[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_RIGHT_2_PATH)));
+        walkAnimationRight = new Animation(TRGame.ENEMY_ANIMATION_FRAME_DURATION, framesRight);
 
-        for (int i = 0; i < TRGame.FRAME_COLS; i++) {
-            walkFramesDown[i]  = tmp[0][i];
-            walkFramesLeft[i]  = tmp[1][i];
-            walkFramesRight[i] = tmp[2][i];
-            walkFramesUp[i]    = tmp[3][i];
-        }
-        walkAnimationUp    = new Animation(TRGame.ANIMATION_DURATION/TRGame.FRAME_COLS, walkFramesUp);
-        walkAnimationDown  = new Animation(TRGame.ANIMATION_DURATION/TRGame.FRAME_COLS, walkFramesDown);
-        walkAnimationLeft  = new Animation(TRGame.ANIMATION_DURATION/TRGame.FRAME_COLS, walkFramesLeft);
-        walkAnimationRight = new Animation(TRGame.ANIMATION_DURATION/TRGame.FRAME_COLS, walkFramesRight);
-        walkAnimation = walkAnimationRight;
-
-        this.enemyTextureUp    = walkFramesUp[TRGame.FRAME_COLS/2];
-        this.enemyTextureDown  = walkFramesDown[TRGame.FRAME_COLS/2];
-        this.enemyTextureLeft  = walkFramesLeft[TRGame.FRAME_COLS/2];
-        this.enemyTextureRight = walkFramesRight[TRGame.FRAME_COLS/2];
-        this.enemyTexture = enemyTextureRight;
-
-        changeDirection();
+        walkAnimation = walkAnimationDown;
+        direction = Direction.DOWN;
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
-
-    public void dispose() {
-        walkSheet.dispose();
+    @Override
+    public void setTexture(String texturePath) {
     }
-
-    // -----------------------------------------------------------------------------------------------------------------
 
     @Override
     public void draw() {
-        TextureRegion currentFrame = null;
-
-        if (moving) {
-            stateTime += Gdx.graphics.getDeltaTime();
-            currentFrame = walkAnimation.getKeyFrame(stateTime, true);
+        if (alert) {
+            objectTexture = textureAlert;
         } else {
-            currentFrame = new TextureRegion(enemyTexture);
+            objectTexture = textureBase;
         }
-        game.getSpriteBatch().draw(currentFrame, rect.x, rect.y, rect.width, rect.height);
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-    private void changeDirection() {
-        direction = game.getRandomDirection();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-
-    @Override
-    public TRGame.Direction getDirection() {
-        return currentDirection;
+        stateTime += Gdx.graphics.getDeltaTime();
+        objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
+        super.draw();
     }
 
     @Override
-    public TRGame.Direction move(TRGame.Direction direction) {
-
-        if (allowedDirections.contains(direction)) {
-
-            float delta = Gdx.graphics.getDeltaTime();
-            float step = speed * delta;
-
-            switch (direction) {
+    public void move(Direction dir) {
+        Direction finalDir = dir;
+        if (alert) {
+            finalDir = playerDirection;
+        }
+        if (!moving) {
+            switch (finalDir) {
                 case UP:
-                    rect.y += step;
-                    enemyTexture = enemyTextureUp;
                     walkAnimation = walkAnimationUp;
                     break;
                 case DOWN:
-                    rect.y -= step;
-                    enemyTexture = enemyTextureDown;
                     walkAnimation = walkAnimationDown;
                     break;
                 case LEFT:
-                    rect.x -= step;
-                    enemyTexture = enemyTextureLeft;
                     walkAnimation = walkAnimationLeft;
                     break;
                 case RIGHT:
-                    rect.x += step;
-                    enemyTexture = enemyTextureRight;
                     walkAnimation = walkAnimationRight;
                     break;
             }
-
-            if (rect.x > TRGame.SCREEN_WIDTH - TRGame.GHOST_WIDTH) {
-                rect.x = TRGame.SCREEN_WIDTH - TRGame.GHOST_WIDTH;
-                changeDirection();
-            } else if (rect.x < 0) {
-                rect.x = 0;
-                changeDirection();
-            } else if (rect.y > TRGame.SCREEN_HEIGHT - TRGame.GHOST_HEIGHT) {
-                rect.y = TRGame.SCREEN_HEIGHT - TRGame.GHOST_HEIGHT;
-                changeDirection();
-            } else if (rect.y < 0) {
-                rect.y = 0;
-                changeDirection();
-            }
-
-            moving = true;
-            currentDirection = direction;
-
-        } else {
-            moving = false;
         }
-
-        return currentDirection;
+        super.move(finalDir);
     }
 
-    public TRGame.Direction move(Pacman player) {
+    public void setPlayerPosition(Position playerPos) {
 
-        float delta = Gdx.graphics.getDeltaTime();
-        //float step = speed * delta;
-        accDelta += delta;
+        Position pos = getCurrentPosition();
 
-        if (player.isAlive() && (distanceTo(player) <= TRGame.ENEMY_RANGE)) {
+        if (pos.distanceTo(playerPos) <= TRGame.ENEMY_ALERT_RANGE) {
 
-            pursuing = true;
-            speed = TRGame.ENEMY_RUN_SPEED;
+            alert = true;
 
-            double difX = this.getX() - player.getX();
-            double difY = this.getY() - player.getY();
+            int xDif = pos.x - playerPos.x;
+            int yDif = pos.y - playerPos.y;
 
-            if ((accDelta > TRGame.ENEMY_RUN_DIR_CHANGE_TIME) &&
-                    (Math.abs(difX) > TRGame.GHOST_WIDTH/2 || Math.abs(difY) > TRGame.GHOST_WIDTH/2) &&
-                    (Math.max(Math.abs(difX),Math.abs(difY))/Math.min(Math.abs(difX),Math.abs(difY)) > 1.05)) {
-
-                if (Math.abs(difX) > Math.abs(difY)) {
-                    if (difX > 0)
-                        direction = TRGame.Direction.LEFT;
-                    else
-                        direction = TRGame.Direction.RIGHT;
-                } else {
-                    if (difY > 0)
-                        direction = TRGame.Direction.DOWN;
-                    else
-                        direction = TRGame.Direction.UP;
-                }
-
-                accDelta = 0;
+            if (xDif == 0 && yDif == 0) {
+                playerDirection = Direction.NONE;
+            } else if (Math.abs(xDif) > Math.abs(yDif)) {
+                if (xDif > 0)
+                    playerDirection = Direction.LEFT;
+                else
+                    playerDirection = Direction.RIGHT;
+            } else {
+                if (yDif > 0)
+                    playerDirection = Direction.DOWN;
+                else
+                    playerDirection = Direction.UP;
             }
         } else {
-
-            pursuing = false;
-            speed = TRGame.ENEMY_WALK_SPEED;
-
-            if (accDelta > TRGame.ENEMY_WALK_DIR_CHANGE_TIME) {
-                changeDirection();
-                accDelta = 0;
-            }
+            alert = false;
         }
-
-        return move(direction);
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------
-
-    public boolean onPursuit() {
-        return pursuing;
-    }
-
-    public void dontMove() {
-        moving = false;
     }
 }
