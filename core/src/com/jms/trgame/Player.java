@@ -21,9 +21,15 @@ public class Player extends ScreenObject {
     private Animation walkAnimationRight, walkAnimationRightTail;
     private Animation walkAnimation, walkAnimationTail;
 
+    TextureRegion[] framesIdleA, framesIdleB;
+
+    private Animation idleAnimationA, idleAnimationB;
+    private Animation idleAnimation;
+
     private Texture objectTextureTail;
 
     private float stateTime = 0.0f;
+    private float idleChangeTime = 0.0f;
 
     public Player(TRGame game, Board board, Position pos) {
 
@@ -63,12 +69,22 @@ public class Player extends ScreenObject {
         framesRightTail[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_PLAYER_TAIL_WALK_RIGHT_2_PATH)));
         walkAnimationRightTail = new Animation(TRGame.PLAYER_ANIMATION_FRAME_DURATION, framesRightTail);
 
-        walkAnimation = walkAnimationRight;
-        walkAnimationTail = walkAnimationRightTail;
-        direction = Direction.RIGHT;
+        framesIdleA = new TextureRegion[2];
+        framesIdleA[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_PLAYER_IDLE_A1_PATH)));
+        framesIdleA[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_PLAYER_IDLE_A2_PATH)));
+        idleAnimationA = new Animation(TRGame.PLAYER_ANIMATION_FRAME_DURATION, framesIdleA);
+
+        framesIdleB = new TextureRegion[2];
+        framesIdleB[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_PLAYER_IDLE_B1_PATH)));
+        framesIdleB[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_PLAYER_IDLE_B2_PATH)));
+        idleAnimationB = new Animation(TRGame.PLAYER_ANIMATION_FRAME_DURATION*4, framesIdleB);
+
+        idleAnimation = idleAnimationA;
+        walkAnimation = idleAnimation;
+
+        direction = Direction.NONE;
 
         objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
-        objectTextureTail = walkAnimationTail.getKeyFrame(stateTime, true).getTexture();
     }
 
     @Override
@@ -77,29 +93,43 @@ public class Player extends ScreenObject {
 
     @Override
     public void draw() {
-        if (moving) {
+        if (!freezed) {
             stateTime += Gdx.graphics.getDeltaTime();
             objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
-            objectTextureTail = walkAnimationTail.getKeyFrame(stateTime, true).getTexture();
         }
         super.draw();
-        float tailX = rect.x;
-        float tailY = rect.y;
-        switch(direction) {
-            case UP :
-                tailY -= TRGame.GRID_CELL_SIDE;
-                break;
-            case DOWN :
-                tailY += TRGame.GRID_CELL_SIDE;
-                break;
-            case LEFT :
-                tailX += TRGame.GRID_CELL_SIDE;
-                break;
-            case RIGHT :
-                tailX -= TRGame.GRID_CELL_SIDE;
-                break;
+        if (moving) {
+            if (!freezed) {
+                objectTextureTail = walkAnimationTail.getKeyFrame(stateTime, true).getTexture();
+            }
+            float tailX = rect.x;
+            float tailY = rect.y;
+            switch (direction) {
+                case UP:
+                    tailY -= TRGame.GRID_CELL_SIDE;
+                    break;
+                case DOWN:
+                    tailY += TRGame.GRID_CELL_SIDE;
+                    break;
+                case LEFT:
+                    tailX += TRGame.GRID_CELL_SIDE;
+                    break;
+                case RIGHT:
+                    tailX -= TRGame.GRID_CELL_SIDE;
+                    break;
+            }
+            game.getSpriteBatch().draw(objectTextureTail, tailX, tailY, rect.width, rect.height);
+        } else {
+            walkAnimation = idleAnimation;
         }
-        game.getSpriteBatch().draw(objectTextureTail, tailX, tailY, rect.width, rect.height);
+        if (stateTime - idleChangeTime > 2) {
+            idleChangeTime = stateTime;
+            if (idleAnimation == idleAnimationA) {
+                idleAnimation = idleAnimationB;
+            } else {
+                idleAnimation = idleAnimationA;
+            }
+        }
     }
 
     @Override
@@ -123,8 +153,29 @@ public class Player extends ScreenObject {
                     walkAnimation = walkAnimationRight;
                     walkAnimationTail = walkAnimationRightTail;
                     break;
+                default :
+                    walkAnimation = idleAnimation;
             }
         }
         super.move(finalDir);
+    }
+
+    @Override
+    public void dispose() {
+
+        super.dispose();
+
+        for (int i = 0; i < 2; i++) {
+            framesUp[i].getTexture().dispose();
+            framesDown[i].getTexture().dispose();
+            framesLeft[i].getTexture().dispose();
+            framesRight[i].getTexture().dispose();
+            framesUpTail[i].getTexture().dispose();
+            framesDownTail[i].getTexture().dispose();
+            framesLeftTail[i].getTexture().dispose();
+            framesRightTail[i].getTexture().dispose();
+            framesIdleA[i].getTexture().dispose();
+            framesIdleB[i].getTexture().dispose();
+        }
     }
 }

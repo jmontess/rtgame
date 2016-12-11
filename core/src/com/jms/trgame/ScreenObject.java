@@ -17,6 +17,7 @@ public class ScreenObject {
     protected Direction direction = Direction.NONE;
     protected int speed = TRGame.OBJECT_SPEED;
     protected float distanceMoved = 0;
+    protected boolean freezed = false;
 
     public ScreenObject(TRGame game, Board board, Position pos) {
 
@@ -35,7 +36,9 @@ public class ScreenObject {
     }
 
     public void draw() {
-        updatePosition();
+        if (!freezed) {
+            updatePosition();
+        }
         if (objectTexture != null) {
             game.getSpriteBatch().draw(objectTexture, rect.x, rect.y, rect.width, rect.height);
         }
@@ -99,6 +102,13 @@ public class ScreenObject {
                 break;
         }
         return result;
+    }
+
+    public void freeze(boolean freeze) {
+        freezed = freeze;
+    }
+
+    public void dispose() {
     }
 
     private void updatePosition() {

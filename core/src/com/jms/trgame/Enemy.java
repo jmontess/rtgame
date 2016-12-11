@@ -10,9 +10,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
  */
 public class Enemy extends ScreenObject {
 
-    private Texture textureBase;
-    private Texture textureAlert;
-
     TextureRegion[] framesUp;
     TextureRegion[] framesDown;
     TextureRegion[] framesLeft;
@@ -32,11 +29,6 @@ public class Enemy extends ScreenObject {
     public Enemy(TRGame game, Board board, Position pos) {
 
         super(game, board, pos);
-
-        textureBase = new Texture(Gdx.files.internal(TRGame.TEXTURE_RED_BOX_PATH));
-        textureAlert = new Texture(Gdx.files.internal(TRGame.TEXTURE_RED_BOX_ALERT_PATH));
-
-        objectTexture = textureBase;
 
         speed = TRGame.ENEMY_SPEED;
 
@@ -70,13 +62,15 @@ public class Enemy extends ScreenObject {
 
     @Override
     public void draw() {
-        if (alert) {
-            objectTexture = textureAlert;
-        } else {
-            objectTexture = textureBase;
+        if (!freezed) {
+            if (alert) {
+                //objectTexture = textureAlert;
+            } else {
+                //objectTexture = textureBase;
+            }
+            stateTime += Gdx.graphics.getDeltaTime();
+            objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
         }
-        stateTime += Gdx.graphics.getDeltaTime();
-        objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
         super.draw();
     }
 
@@ -165,6 +159,19 @@ public class Enemy extends ScreenObject {
             }
         } else {
             alert = false;
+        }
+    }
+
+    @Override
+    public void dispose() {
+
+        super.dispose();
+
+        for (int i = 0; i < 2; i++) {
+            framesUp[i].getTexture().dispose();
+            framesDown[i].getTexture().dispose();
+            framesLeft[i].getTexture().dispose();
+            framesRight[i].getTexture().dispose();
         }
     }
 }

@@ -126,4 +126,8 @@ public class Board {
             game.getSpriteBatch().draw(obstacleTexture, pos.x*TRGame.GRID_CELL_SIDE, pos.y*TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE);
         }
     }
+
+    public void dispose() {
+        obstacleTexture.dispose();
+    }
 }

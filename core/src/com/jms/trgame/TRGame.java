@@ -19,6 +19,7 @@ public class TRGame extends Game {
     public static final int GRID_CELL_SIDE = 64*SCREEN_SCALE;
 
     public static final String TEXTURE_FLOOR_PATH         = "floor.png";
+    public static final String TEXTURE_VEIL_PATH          = "veil.png";
     public static final String TEXTURE_GREEN_BOX_PATH     = "green_box.png";
     public static final String TEXTURE_RED_BOX_PATH       = "red_box.png";
     public static final String TEXTURE_RED_BOX_ALERT_PATH = "red_box_alert.png";
@@ -43,6 +44,11 @@ public class TRGame extends Game {
     public static final String TEXTURE_PLAYER_TAIL_WALK_RIGHT_1_PATH = "player/right/1t.png";
     public static final String TEXTURE_PLAYER_TAIL_WALK_RIGHT_2_PATH = "player/right/2t.png";
 
+    public static final String TEXTURE_PLAYER_IDLE_A1_PATH = "player/idle/a1.png";
+    public static final String TEXTURE_PLAYER_IDLE_A2_PATH = "player/idle/a2.png";
+    public static final String TEXTURE_PLAYER_IDLE_B1_PATH = "player/idle/b1.png";
+    public static final String TEXTURE_PLAYER_IDLE_B2_PATH = "player/idle/b2.png";
+
     public static final String TEXTURE_ENEMY_WALK_UP_1_PATH = "enemy/up/1.png";
     public static final String TEXTURE_ENEMY_WALK_UP_2_PATH = "enemy/up/2.png";
     public static final String TEXTURE_ENEMY_WALK_DOWN_1_PATH = "enemy/down/1.png";
@@ -56,6 +62,7 @@ public class TRGame extends Game {
     public static final String TEXTURE_ROCK_PATH = "rock.png";
 
     public static final String SOUND_BITE_PATH = "sounds/bite.mp3";
+    public static final String SOUND_OUCH_PATH = "sounds/ouch.mp3";
 
     public static final int OBJECT_SPEED = 150*SCREEN_SCALE;
     public static final int ENEMY_SPEED = 75*SCREEN_SCALE;
@@ -70,13 +77,14 @@ public class TRGame extends Game {
     // -----------------------------------------------------------------------------------------------------------------
 
     private SpriteBatch spriteBatch;
-	private BitmapFont font;
+	private BitmapFont font, largeFont;
 	private GameScreen gameScreen;
 
 	public void create() {
 
         spriteBatch = new SpriteBatch();
         font = new BitmapFont(Gdx.files.internal("mistervampire.regular.fnt"));
+        largeFont = new BitmapFont(Gdx.files.internal("mistervampire.regular.large.fnt"));
         //this.setScreen(new MainMenuScreen(this));
         gameScreen = new GameScreen(this);
         this.setScreen(gameScreen);
@@ -89,6 +97,7 @@ public class TRGame extends Game {
 	public void dispose() {
         spriteBatch.dispose();
 		font.dispose();
+		largeFont.dispose();
 		gameScreen.dispose();
 	}
 
@@ -102,6 +111,10 @@ public class TRGame extends Game {
 
     public BitmapFont getFont() {
         return font;
+    }
+
+    public BitmapFont getLargeFont() {
+        return largeFont;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

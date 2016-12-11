@@ -1,11 +1,14 @@
 package com.jms.trgame;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 
@@ -21,7 +24,7 @@ public class GameScreen implements Screen {
 
     private OrthographicCamera camera;
 
-    private Texture floorTexture;
+    private Texture floorTexture, veilTexture, cheeseTexture;
 
     private Board board;
 
@@ -29,9 +32,18 @@ public class GameScreen implements Screen {
     private Enemy enemy;
     private List<ScreenObject> cheese;
 
-    private Sound biteSound;
+    private Sound biteSound, ouchSound;
 
-    private int score = 0;
+    private int previousScore;
+    private int score;
+    private int numCheese;
+    private float timer;
+
+    private enum GameStatus {
+        PLAYING, FINISHED, OVER
+    }
+
+    GameStatus gameStatus;
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -40,15 +52,23 @@ public class GameScreen implements Screen {
 
         this.game = game;
 
-        // Creating the board
-        board = new Board(game, TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE, TRGame.SCREEN_HEIGHT/TRGame.GRID_CELL_SIDE);
-
         // Creating the camera
         camera = new OrthographicCamera(TRGame.SCREEN_WIDTH, TRGame.SCREEN_HEIGHT);
         camera.setToOrtho(false, TRGame.SCREEN_WIDTH, TRGame.SCREEN_HEIGHT);
 
-        // Loading floor texture
+        // Initializing game;
+        init(0);
+    }
+
+    private void init(int initialScore) {
+
+        // Creating the board
+        board = new Board(game, TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE, TRGame.SCREEN_HEIGHT/TRGame.GRID_CELL_SIDE);
+
+        // Loading textures
         floorTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_FLOOR_PATH));
+        veilTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_VEIL_PATH));
+        cheeseTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_CHEESE_PATH));
 
         // Creating obstacles
         for (int i = 0; i < 10; i++) {
@@ -86,6 +106,14 @@ public class GameScreen implements Screen {
 
         // Creating sounds
         biteSound = Gdx.audio.newSound(Gdx.files.internal(TRGame.SOUND_BITE_PATH));
+        ouchSound = Gdx.audio.newSound(Gdx.files.internal(TRGame.SOUND_OUCH_PATH));
+
+        // Setting state
+        previousScore = initialScore;
+        score = initialScore;
+        numCheese = 0;
+        timer = 0;
+        gameStatus = GameStatus.PLAYING;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -104,16 +132,22 @@ public class GameScreen implements Screen {
         // coordinate system specified by the camera.
         game.getSpriteBatch().setProjectionMatrix(camera.combined);
 
+        // Check if some cheese is taken
+        checkCheese();
+
+        // Check if the player is caught
+        chechCaught();;
+
         // Draw the screen
         game.getSpriteBatch().begin();
+
         drawFloor();
         board.draw();
         for (ScreenObject c : cheese) { c.draw(); }
         player.draw();
         enemy.draw();
-
         game.getFont().draw(game.getSpriteBatch(), ""+score, 8, TRGame.SCREEN_HEIGHT-8);
-
+        drawOvertext();
         game.getSpriteBatch().end();
 
         // Process input
@@ -124,20 +158,6 @@ public class GameScreen implements Screen {
 
         // Move enemy
         enemy.move(getRandomDirectionFrom(enemy.getCurrentPosition()));
-
-        // Check if some cheese is taken
-        int i = 0;
-        while (i < cheese.size()) {
-            ScreenObject c = cheese.get(i);
-            if (player.distanceTo(c) < 1) {
-                cheese.remove(i);
-                biteSound.play();
-                score += TRGame.CHEESE_SCORE;
-            } else {
-                i++;
-            }
-        }
-
     }
 
     @Override
@@ -162,7 +182,15 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        floorTexture.dispose();
+        veilTexture.dispose();
+        cheeseTexture.dispose();
+        board.dispose();
+        player.dispose();
+        enemy.dispose();
+        for (ScreenObject c : cheese) c.dispose();
+        biteSound.dispose();
+        ouchSound.dispose();
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -171,47 +199,167 @@ public class GameScreen implements Screen {
         game.getSpriteBatch().draw(floorTexture, 0, 0, TRGame.SCREEN_WIDTH, TRGame.SCREEN_HEIGHT);
     }
 
+    private void drawVeil() {
+        game.getSpriteBatch().draw(veilTexture, 0, 0, TRGame.SCREEN_WIDTH, TRGame.SCREEN_HEIGHT);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private void drawOvertext() {
+
+        if (gameStatus != GameStatus.PLAYING) {
+            timer -= Gdx.graphics.getDeltaTime();
+            if (timer <= 0) {
+                timer = 0;
+                String header = "";
+                switch (gameStatus) {
+                    case OVER:
+                        header = "GAME OVER";
+                        break;
+                    case FINISHED:
+                        header = "STAGE CLEAR";
+                        break;
+                }
+                drawVeil();
+                // Game over
+                GlyphLayout glyphLayout = new GlyphLayout();
+                glyphLayout.setText(game.getLargeFont(), header);
+                game.getLargeFont().draw(
+                        game.getSpriteBatch(),
+                        glyphLayout,
+                        (int) ((TRGame.SCREEN_WIDTH - glyphLayout.width) * 0.5),
+                        (int) (TRGame.SCREEN_HEIGHT * 0.85));
+                // Previous score line
+                game.getFont().draw(
+                        game.getSpriteBatch(),
+                        "Previous",
+                        (int) (TRGame.SCREEN_WIDTH * 0.25),
+                        (int) (TRGame.SCREEN_HEIGHT * 0.6));
+                game.getFont().draw(
+                        game.getSpriteBatch(),
+                        "" + previousScore,
+                        (int) (TRGame.SCREEN_WIDTH * 0.55) + TRGame.GRID_CELL_SIDE,
+                        (int) (TRGame.SCREEN_HEIGHT * 0.6));
+                // Cheese count line
+                game.getSpriteBatch().draw(
+                        cheeseTexture,
+                        (int) (TRGame.SCREEN_WIDTH * 0.25),
+                        (int) (TRGame.SCREEN_HEIGHT * 0.35),
+                        TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE);
+                game.getFont().draw(
+                        game.getSpriteBatch(),
+                        " x " + numCheese,
+                        (int) (TRGame.SCREEN_WIDTH * 0.25) + TRGame.GRID_CELL_SIDE,
+                        (int) (TRGame.SCREEN_HEIGHT * 0.35 + TRGame.GRID_CELL_SIDE * 0.75));
+                game.getFont().draw(
+                        game.getSpriteBatch(),
+                        "" + (numCheese * TRGame.CHEESE_SCORE),
+                        (int) (TRGame.SCREEN_WIDTH * 0.55) + TRGame.GRID_CELL_SIDE,
+                        (int) (TRGame.SCREEN_HEIGHT * 0.35 + TRGame.GRID_CELL_SIDE * 0.75));
+                // Total score line
+                game.getFont().draw(
+                        game.getSpriteBatch(),
+                        "Total",
+                        (int) (TRGame.SCREEN_WIDTH * 0.25),
+                        (int) (TRGame.SCREEN_HEIGHT * 0.3));
+                game.getFont().draw(
+                        game.getSpriteBatch(),
+                        "" + score,
+                        (int) (TRGame.SCREEN_WIDTH * 0.55) + TRGame.GRID_CELL_SIDE,
+                        (int) (TRGame.SCREEN_HEIGHT * 0.3));
+
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private void checkCheese() {
+        int i = 0;
+        while (i < cheese.size()) {
+            ScreenObject c = cheese.get(i);
+            if (player.distanceTo(c) < 1) {
+                cheese.remove(i);
+                biteSound.play();
+                score += TRGame.CHEESE_SCORE;
+                numCheese++;
+            } else {
+                i++;
+            }
+        }
+
+        // Check if the game has finished
+        if (gameStatus == GameStatus.PLAYING && cheese.size() == 0) {
+            enemy.freeze(true);
+            player.freeze(true);
+            gameStatus = GameStatus.FINISHED;
+            timer = 2;
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    private void chechCaught() {
+        if (gameStatus == GameStatus.PLAYING && player.distanceTo(enemy) < 1) {
+            ouchSound.play();
+            enemy.freeze(true);
+            player.freeze(true);
+            gameStatus = GameStatus.OVER;
+            timer = 2;
+        }
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
 
     private void processInput() {
 
-        if (Gdx.input.isTouched()) {
+        if (gameStatus == GameStatus.PLAYING) {
 
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
+            if (Gdx.input.isTouched()) {
 
-            Position touch = new Position(Math.round(touchPos.x/TRGame.GRID_CELL_SIDE), Math.round(touchPos.y/TRGame.GRID_CELL_SIDE));
-            Position playerPos = player.getCurrentPosition();
-            Direction dir;
+                Vector3 touchPos = new Vector3();
+                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+                camera.unproject(touchPos);
 
-            int xDif = touch.x - playerPos.x;
-            int yDif = touch.y - playerPos.y;
+                Position touch = new Position(Math.round(touchPos.x / TRGame.GRID_CELL_SIDE), Math.round(touchPos.y / TRGame.GRID_CELL_SIDE));
+                Position playerPos = player.getCurrentPosition();
+                Direction dir;
 
-            if (xDif == 0 && yDif == 0) {
-                dir = Direction.NONE;
-            } else if (Math.abs(xDif) > Math.abs(yDif)) {
-                if (xDif < 0)
-                    dir = Direction.LEFT;
-                else
-                    dir = Direction.RIGHT;
-            } else {
-                if (yDif < 0)
-                    dir = Direction.DOWN;
-                else
-                    dir = Direction.UP;
+                int xDif = touch.x - playerPos.x;
+                int yDif = touch.y - playerPos.y;
+
+                if (xDif == 0 && yDif == 0) {
+                    dir = Direction.NONE;
+                } else if (Math.abs(xDif) > Math.abs(yDif)) {
+                    if (xDif < 0)
+                        dir = Direction.LEFT;
+                    else
+                        dir = Direction.RIGHT;
+                } else {
+                    if (yDif < 0)
+                        dir = Direction.DOWN;
+                    else
+                        dir = Direction.UP;
+                }
+                player.move(dir);
+
+            } else if (Gdx.input.isKeyPressed(Input.Keys.UP))
+                player.move(Direction.UP);
+            else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
+                player.move(Direction.DOWN);
+            else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
+                player.move(Direction.LEFT);
+            else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
+                player.move(Direction.RIGHT);
+
+        } else if (gameStatus == GameStatus.OVER || gameStatus == GameStatus.FINISHED) {
+
+            if (timer <= 0 && Gdx.input.isTouched()) {
+
+                this.dispose();
+                this.init(gameStatus == GameStatus.FINISHED ? score : 0);
             }
-            player.move(dir);
-
-        } else if (Gdx.input.isKeyPressed(Input.Keys.UP))
-            player.move(Direction.UP);
-        else if (Gdx.input.isKeyPressed(Input.Keys.DOWN))
-            player.move(Direction.DOWN);
-        else if (Gdx.input.isKeyPressed(Input.Keys.LEFT))
-            player.move(Direction.LEFT);
-        else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT))
-            player.move(Direction.RIGHT);
-
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------
