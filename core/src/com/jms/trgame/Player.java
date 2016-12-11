@@ -135,7 +135,7 @@ public class Player extends ScreenObject {
     @Override
     public void move(Direction dir) {
         Direction finalDir = dir;
-        if (!moving) {
+        if (canMove(finalDir) && !moving) {
             switch (finalDir) {
                 case UP:
                     walkAnimation = walkAnimationUp;
