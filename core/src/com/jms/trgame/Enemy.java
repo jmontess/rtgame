@@ -116,18 +116,52 @@ public class Enemy extends ScreenObject {
             int xDif = pos.x - playerPos.x;
             int yDif = pos.y - playerPos.y;
 
+            Direction mainDir = Direction.NONE;
+            Direction secondaryDir = Direction.NONE;
+
             if (xDif == 0 && yDif == 0) {
                 playerDirection = Direction.NONE;
             } else if (Math.abs(xDif) > Math.abs(yDif)) {
-                if (xDif > 0)
-                    playerDirection = Direction.LEFT;
-                else
-                    playerDirection = Direction.RIGHT;
+                if (xDif > 0) {
+                    mainDir = Direction.LEFT;
+                } else if (xDif < 0) {
+                    mainDir = Direction.RIGHT;
+                }
+                if (yDif > 0) {
+                    secondaryDir = Direction.DOWN;
+                } else if (yDif < 0) {
+                    secondaryDir = Direction.UP;
+                }
+
+                if (!canMove(mainDir) && secondaryDir == Direction.NONE) {
+                    if (canMove(Direction.DOWN)) secondaryDir = Direction.DOWN;
+                    else if (canMove(Direction.UP)) secondaryDir = Direction.UP;
+                }
+
             } else {
-                if (yDif > 0)
-                    playerDirection = Direction.DOWN;
-                else
-                    playerDirection = Direction.UP;
+                if (yDif > 0) {
+                    mainDir = Direction.DOWN;
+                } else if (yDif < 0) {
+                    mainDir = Direction.UP;
+                }
+                if (xDif > 0) {
+                    secondaryDir = Direction.LEFT;
+                } else if (xDif < 0) {
+                    secondaryDir = Direction.RIGHT;
+                }
+
+                if (!canMove(mainDir) && secondaryDir == Direction.NONE) {
+                    if (canMove(Direction.LEFT)) secondaryDir = Direction.LEFT;
+                    else if (canMove(Direction.RIGHT)) secondaryDir = Direction.RIGHT;
+                }
+            }
+
+            if (!this.canMove(mainDir)) mainDir = Direction.NONE;
+            if (!this.canMove(secondaryDir)) secondaryDir = Direction.NONE;
+
+            playerDirection = mainDir;
+            if (mainDir == Direction.NONE) {
+                playerDirection = secondaryDir;
             }
         } else {
             alert = false;

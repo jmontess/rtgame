@@ -38,7 +38,7 @@ public class Board {
             }
         }
 
-        obstacleTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_GREY_BOX_PATH));
+        obstacleTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_ROCK_PATH));
     }
 
     // -----------------------------------------------------------------------------------------------------------------

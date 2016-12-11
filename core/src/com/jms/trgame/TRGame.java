@@ -1,6 +1,7 @@
 package com.jms.trgame;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -11,13 +12,13 @@ public class TRGame extends Game {
     //public static final String GAME_TITLE = "Rat Adventures";
     public static final String GAME_TITLE = "Test";
 
-    public static final int SCREEN_SCALE  = 4;
+    public static final int SCREEN_SCALE  = 1;
     public static final int SCREEN_WIDTH  = 640*SCREEN_SCALE;
     public static final int SCREEN_HEIGHT = 384*SCREEN_SCALE;
 
     public static final int GRID_CELL_SIDE = 64*SCREEN_SCALE;
 
-    public static final String TEXTURE_FLOOR_PATH         = "floor_plain.png";
+    public static final String TEXTURE_FLOOR_PATH         = "floor.png";
     public static final String TEXTURE_GREEN_BOX_PATH     = "green_box.png";
     public static final String TEXTURE_RED_BOX_PATH       = "red_box.png";
     public static final String TEXTURE_RED_BOX_ALERT_PATH = "red_box_alert.png";
@@ -52,7 +53,9 @@ public class TRGame extends Game {
     public static final String TEXTURE_ENEMY_WALK_RIGHT_2_PATH = "enemy/right/2.png";
 
     public static final String TEXTURE_CHEESE_PATH = "cheese.png";
+    public static final String TEXTURE_ROCK_PATH = "rock.png";
 
+    public static final String SOUND_BITE_PATH = "sounds/bite.mp3";
 
     public static final int OBJECT_SPEED = 150*SCREEN_SCALE;
     public static final int ENEMY_SPEED = 75*SCREEN_SCALE;
@@ -61,6 +64,8 @@ public class TRGame extends Game {
 
     public static final float ENEMY_ANIMATION_FRAME_DURATION = 0.3f;
     public static final float PLAYER_ANIMATION_FRAME_DURATION = 0.15f;
+
+    public static final int CHEESE_SCORE = 10;
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -71,9 +76,8 @@ public class TRGame extends Game {
 	public void create() {
 
         spriteBatch = new SpriteBatch();
-		//Use LibGDX's default Arial font.
-		font = new BitmapFont();
-		//this.setScreen(new MainMenuScreen(this));
+        font = new BitmapFont(Gdx.files.internal("mistervampire.regular.fnt"));
+        //this.setScreen(new MainMenuScreen(this));
         gameScreen = new GameScreen(this);
         this.setScreen(gameScreen);
 	}
@@ -84,7 +88,7 @@ public class TRGame extends Game {
 
 	public void dispose() {
         spriteBatch.dispose();
-		//font.dispose();
+		font.dispose();
 		gameScreen.dispose();
 	}
 
@@ -92,6 +96,12 @@ public class TRGame extends Game {
 
     public SpriteBatch getSpriteBatch() {
         return spriteBatch;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    public BitmapFont getFont() {
+        return font;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

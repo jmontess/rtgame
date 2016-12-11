@@ -3,6 +3,7 @@ package com.jms.trgame;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
@@ -27,6 +28,10 @@ public class GameScreen implements Screen {
     private Player player;
     private Enemy enemy;
     private List<ScreenObject> cheese;
+
+    private Sound biteSound;
+
+    private int score = 0;
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -78,6 +83,9 @@ public class GameScreen implements Screen {
         for (ScreenObject c : cheese) {
             board.setEmpty(c.getCurrentPosition(), true);
         }
+
+        // Creating sounds
+        biteSound = Gdx.audio.newSound(Gdx.files.internal(TRGame.SOUND_BITE_PATH));
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -103,6 +111,9 @@ public class GameScreen implements Screen {
         for (ScreenObject c : cheese) { c.draw(); }
         player.draw();
         enemy.draw();
+
+        game.getFont().draw(game.getSpriteBatch(), ""+score, 8, TRGame.SCREEN_HEIGHT-8);
+
         game.getSpriteBatch().end();
 
         // Process input
@@ -120,6 +131,8 @@ public class GameScreen implements Screen {
             ScreenObject c = cheese.get(i);
             if (player.distanceTo(c) < 1) {
                 cheese.remove(i);
+                biteSound.play();
+                score += TRGame.CHEESE_SCORE;
             } else {
                 i++;
             }

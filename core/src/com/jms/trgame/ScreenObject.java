@@ -2,7 +2,6 @@ package com.jms.trgame;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 
 /**
@@ -80,6 +79,26 @@ public class ScreenObject {
 
     public double distanceTo(ScreenObject o) {
         return this.getCurrentPosition().distanceTo(o.getCurrentPosition());
+    }
+
+    public boolean canMove(Direction dir) {
+        Position currentPos = this.getCurrentPosition();
+        boolean result = true;
+        switch (dir) {
+            case UP:
+                result = board.isEmpty(currentPos.x, currentPos.y+1);
+                break;
+            case DOWN:
+                result = board.isEmpty(currentPos.x, currentPos.y-1);
+                break;
+            case LEFT:
+                result = board.isEmpty(currentPos.x-1, currentPos.y);
+                break;
+            case RIGHT:
+                result = board.isEmpty(currentPos.x+1, currentPos.y);
+                break;
+        }
+        return result;
     }
 
     private void updatePosition() {
