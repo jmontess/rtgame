@@ -14,12 +14,16 @@ public class Enemy extends ScreenObject {
     TextureRegion[] framesDown;
     TextureRegion[] framesLeft;
     TextureRegion[] framesRight;
+    TextureRegion[] framesAlert;
 
     private Animation walkAnimationUp;
     private Animation walkAnimationDown;
     private Animation walkAnimationLeft;
     private Animation walkAnimationRight;
     private Animation walkAnimation;
+    private Animation alertAnimation;
+
+    private Texture alertTexture;
 
     private float stateTime = 0.0f;
 
@@ -52,8 +56,15 @@ public class Enemy extends ScreenObject {
         framesRight[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_WALK_RIGHT_2_PATH)));
         walkAnimationRight = new Animation(TRGame.ENEMY_ANIMATION_FRAME_DURATION, framesRight);
 
+        framesAlert = new TextureRegion[2];
+        framesAlert[0] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_ALERT_1_PATH)));
+        framesAlert[1] = new TextureRegion(new Texture(Gdx.files.internal(TRGame.TEXTURE_ENEMY_ALERT_2_PATH)));
+        alertAnimation = new Animation(TRGame.ENEMY_ANIMATION_FRAME_DURATION, framesAlert);
+
         walkAnimation = walkAnimationDown;
         direction = Direction.DOWN;
+
+        alertTexture = alertAnimation.getKeyFrame(0, true).getTexture();
     }
 
     @Override
@@ -63,15 +74,14 @@ public class Enemy extends ScreenObject {
     @Override
     public void draw() {
         if (!freezed) {
-            if (alert) {
-                //objectTexture = textureAlert;
-            } else {
-                //objectTexture = textureBase;
-            }
             stateTime += Gdx.graphics.getDeltaTime();
             objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
         }
         super.draw();
+        if (alert) {
+            alertTexture = alertAnimation.getKeyFrame(stateTime, true).getTexture();
+            game.getSpriteBatch().draw(alertTexture, rect.x, rect.y+TRGame.GRID_CELL_SIDE/3, TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE);
+        }
     }
 
     @Override

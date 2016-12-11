@@ -58,7 +58,18 @@ public class TRGame extends Game {
     public static final String TEXTURE_ENEMY_WALK_RIGHT_1_PATH = "enemy/right/1.png";
     public static final String TEXTURE_ENEMY_WALK_RIGHT_2_PATH = "enemy/right/2.png";
 
-    public static final String TEXTURE_CHEESE_PATH = "cheese.png";
+    public static final String TEXTURE_ENEMY_ALERT_1_PATH = "enemy/alert/1.png";
+    public static final String TEXTURE_ENEMY_ALERT_2_PATH = "enemy/alert/2.png";
+
+    public static final String[] TEXTURE_CHEESE_PATHS = {
+            "cheese/1.png",
+            "cheese/2.png",
+            "cheese/3.png",
+            "cheese/4.png",
+            "cheese/5.png",
+            "cheese/6.png"
+    };
+
     public static final String TEXTURE_ROCK_PATH = "rock.png";
 
     public static final String SOUND_BITE_PATH = "sounds/bite.mp3";
@@ -83,8 +94,8 @@ public class TRGame extends Game {
 	public void create() {
 
         spriteBatch = new SpriteBatch();
-        font = new BitmapFont(Gdx.files.internal("mistervampire.regular.fnt"));
-        largeFont = new BitmapFont(Gdx.files.internal("mistervampire.regular.large.fnt"));
+        font = new BitmapFont(Gdx.files.internal("fonts/mistervampire.regular.fnt"));
+        largeFont = new BitmapFont(Gdx.files.internal("fonts/mistervampire.regular.large.fnt"));
         //this.setScreen(new MainMenuScreen(this));
         gameScreen = new GameScreen(this);
         this.setScreen(gameScreen);

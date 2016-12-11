@@ -68,7 +68,7 @@ public class GameScreen implements Screen {
         // Loading textures
         floorTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_FLOOR_PATH));
         veilTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_VEIL_PATH));
-        cheeseTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_CHEESE_PATH));
+        cheeseTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_CHEESE_PATHS[0]));
 
         // Creating obstacles
         for (int i = 0; i < 10; i++) {
@@ -92,7 +92,7 @@ public class GameScreen implements Screen {
         for (int i = 0; i < 3; i++) {
             Position cheesePos = board.getRandomEmptyCell();
             ScreenObject cheeseObj = new ScreenObject(game, board, cheesePos);
-            cheeseObj.setTexture(TRGame.TEXTURE_CHEESE_PATH);
+            cheeseObj.setTexture(getRandomCheeseTexturePath());
             cheese.add(cheeseObj);
             board.setEmpty(cheesePos, false);
         }
@@ -250,12 +250,12 @@ public class GameScreen implements Screen {
                         game.getSpriteBatch(),
                         " x " + numCheese,
                         (int) (TRGame.SCREEN_WIDTH * 0.25) + TRGame.GRID_CELL_SIDE,
-                        (int) (TRGame.SCREEN_HEIGHT * 0.35 + TRGame.GRID_CELL_SIDE * 0.75));
+                        (int) (TRGame.SCREEN_HEIGHT * 0.35 + TRGame.GRID_CELL_SIDE * 0.65));
                 game.getFont().draw(
                         game.getSpriteBatch(),
                         "" + (numCheese * TRGame.CHEESE_SCORE),
                         (int) (TRGame.SCREEN_WIDTH * 0.55) + TRGame.GRID_CELL_SIDE,
-                        (int) (TRGame.SCREEN_HEIGHT * 0.35 + TRGame.GRID_CELL_SIDE * 0.75));
+                        (int) (TRGame.SCREEN_HEIGHT * 0.35 + TRGame.GRID_CELL_SIDE * 0.65));
                 // Total score line
                 game.getFont().draw(
                         game.getSpriteBatch(),
@@ -367,5 +367,9 @@ public class GameScreen implements Screen {
     public Direction getRandomDirectionFrom(Position pos) {
         List<Direction> availiableDirs = board.getAvailableDirections(pos);
         return availiableDirs.get(MathUtils.random(0, availiableDirs.size()-1));
+    }
+
+    public String getRandomCheeseTexturePath() {
+        return TRGame.TEXTURE_CHEESE_PATHS[MathUtils.random(0,TRGame.TEXTURE_CHEESE_PATHS.length-1)];
     }
 }
