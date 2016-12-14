@@ -148,6 +148,7 @@ public class GameScreen implements Screen {
         enemy.draw();
         game.getFont().draw(game.getSpriteBatch(), ""+score, 8, TRGame.SCREEN_HEIGHT-8);
         drawOvertext();
+
         game.getSpriteBatch().end();
 
         // Process input

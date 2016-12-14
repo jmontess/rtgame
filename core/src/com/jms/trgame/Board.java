@@ -20,6 +20,8 @@ public class Board {
     int width;
     int height;
 
+    private boolean allowLeave = false;
+
     Texture obstacleTexture;
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -59,10 +61,16 @@ public class Board {
         this.height = height;
     }
 
+    public void setAllowLeave(boolean allow) {
+        allowLeave = allow;
+    }
+
     public boolean isEmpty(int x, int y) {
         boolean result = false;
         if (x >= 0 && x < width && y >= 0 && y < height)
             result = boardMap[x][y];
+        if (allowLeave && (x < 0 || x >= width || y < 0 || y > height))
+            result = true;
         return result;
     }
 

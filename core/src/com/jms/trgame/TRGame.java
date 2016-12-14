@@ -9,8 +9,8 @@ public class TRGame extends Game {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    //public static final String GAME_TITLE = "Rat Adventures";
-    public static final String GAME_TITLE = "Test";
+    public static final String GAME_TITLE = "Rat Adventures";
+    //public static final String GAME_TITLE = "Test";
 
     public static final int SCREEN_SCALE  = 1;
     public static final int SCREEN_WIDTH  = 640*SCREEN_SCALE;
@@ -18,6 +18,7 @@ public class TRGame extends Game {
 
     public static final int GRID_CELL_SIDE = 64*SCREEN_SCALE;
 
+    public static final String TEXTURE_INTRO_FLOOR_PATH   = "intro_floor.png";
     public static final String TEXTURE_FLOOR_PATH         = "floor.png";
     public static final String TEXTURE_VEIL_PATH          = "veil.png";
     public static final String TEXTURE_GREEN_BOX_PATH     = "green_box.png";
@@ -88,17 +89,18 @@ public class TRGame extends Game {
     // -----------------------------------------------------------------------------------------------------------------
 
     private SpriteBatch spriteBatch;
-	private BitmapFont font, largeFont;
-	private GameScreen gameScreen;
+	private BitmapFont font, largeFont, xlargeFont;
+	public GameScreen gameScreen;
 
 	public void create() {
 
         spriteBatch = new SpriteBatch();
         font = new BitmapFont(Gdx.files.internal("fonts/mistervampire.regular.fnt"));
         largeFont = new BitmapFont(Gdx.files.internal("fonts/mistervampire.regular.large.fnt"));
-        //this.setScreen(new MainMenuScreen(this));
-        gameScreen = new GameScreen(this);
-        this.setScreen(gameScreen);
+        xlargeFont = new BitmapFont(Gdx.files.internal("fonts/mistervampire.regular.xlarge.fnt"));
+        this.setScreen(new MainScreen(this));
+        //gameScreen = new GameScreen(this);
+        //this.setScreen(gameScreen);
 	}
 
 	public void render() {
@@ -109,7 +111,8 @@ public class TRGame extends Game {
         spriteBatch.dispose();
 		font.dispose();
 		largeFont.dispose();
-		gameScreen.dispose();
+        xlargeFont.dispose();
+		if (gameScreen != null) gameScreen.dispose();
 	}
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -126,6 +129,10 @@ public class TRGame extends Game {
 
     public BitmapFont getLargeFont() {
         return largeFont;
+    }
+
+    public BitmapFont getXLargeFont() {
+        return xlargeFont;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

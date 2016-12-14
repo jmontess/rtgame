@@ -73,7 +73,7 @@ public class Enemy extends ScreenObject {
 
     @Override
     public void draw() {
-        if (!freezed) {
+        if (!freezed && direction != Direction.NONE) {
             stateTime += Gdx.graphics.getDeltaTime();
             objectTexture = walkAnimation.getKeyFrame(stateTime, true).getTexture();
         }
@@ -87,7 +87,7 @@ public class Enemy extends ScreenObject {
     @Override
     public void move(Direction dir) {
         Direction finalDir = dir;
-        if (alert) {
+        if (alert && playerDirection != Direction.NONE) {
             finalDir = playerDirection;
         }
         if (!moving) {
@@ -105,6 +105,7 @@ public class Enemy extends ScreenObject {
                     walkAnimation = walkAnimationRight;
                     break;
             }
+            direction = finalDir;
         }
         super.move(finalDir);
     }
@@ -170,6 +171,10 @@ public class Enemy extends ScreenObject {
         } else {
             alert = false;
         }
+    }
+
+    public void setAlert(boolean alert) {
+        this.alert = alert;
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.jms.trgame;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
+import javafx.geometry.Pos;
 
 /**
  * Created by jmontes on 9/12/16.
@@ -27,12 +28,16 @@ public class ScreenObject {
         this.rect = new Rectangle();
         this.rect.width  = TRGame.GRID_CELL_SIDE;
         this.rect.height = TRGame.GRID_CELL_SIDE;
-        this.rect.x = pos.x * TRGame.GRID_CELL_SIDE;
-        this.rect.y = pos.y * TRGame.GRID_CELL_SIDE;
+        this.setPosition(pos);
     }
 
     public void setTexture(String texturePath) {
         this.objectTexture = new Texture(Gdx.files.internal(texturePath));
+    }
+
+    public void setPosition(Position pos) {
+        this.rect.x = pos.x * TRGame.GRID_CELL_SIDE;
+        this.rect.y = pos.y * TRGame.GRID_CELL_SIDE;
     }
 
     public void draw() {
