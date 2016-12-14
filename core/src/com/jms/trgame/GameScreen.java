@@ -357,8 +357,13 @@ public class GameScreen implements Screen {
 
             if (timer <= 0 && Gdx.input.isTouched()) {
 
-                this.dispose();
-                this.init(gameStatus == GameStatus.FINISHED ? score : 0);
+                if (gameStatus == GameStatus.OVER) {
+                    game.setScreen(new MainScreen(game));
+                    game.gameScreen = null;
+                    this.dispose();
+                } else {
+                    this.init(score);
+                }
             }
         }
     }

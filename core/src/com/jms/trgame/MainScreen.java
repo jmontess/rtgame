@@ -167,7 +167,7 @@ public class MainScreen implements Screen {
         timer += delta;
 
         // check if screen clicked
-        if (Gdx.input.isTouched()) {
+        if (timer > 0.5 && Gdx.input.isTouched()) {
             game.gameScreen = new GameScreen(game);
             game.setScreen(game.gameScreen);
             dispose();
