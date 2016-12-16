@@ -3,7 +3,6 @@ package com.jms.trgame;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
-import javafx.geometry.Pos;
 
 /**
  * Created by jmontes on 9/12/16.
@@ -20,7 +19,7 @@ public class ScreenObject {
     protected float distanceMoved = 0;
     protected boolean freezed = false;
 
-    public ScreenObject(TRGame game, Board board, Position pos) {
+    public ScreenObject(TRGame game, Board board, BoardPosition pos) {
 
         this.game = game;
         this.board = board;
@@ -35,7 +34,7 @@ public class ScreenObject {
         this.objectTexture = new Texture(Gdx.files.internal(texturePath));
     }
 
-    public void setPosition(Position pos) {
+    public void setPosition(BoardPosition pos) {
         this.rect.x = pos.x * TRGame.GRID_CELL_SIDE;
         this.rect.y = pos.y * TRGame.GRID_CELL_SIDE;
     }
@@ -51,7 +50,7 @@ public class ScreenObject {
 
     public void move(Direction dir) {
         if (!moving && (dir != Direction.NONE)) {
-            Position nextPos = getCurrentPosition();
+            BoardPosition nextPos = getCurrentPosition();
             switch (dir) {
                 case UP:
                     nextPos.y++;
@@ -73,8 +72,8 @@ public class ScreenObject {
         }
     }
 
-    public Position getCurrentPosition() {
-        return new Position((int)Math.round(rect.x/TRGame.GRID_CELL_SIDE), (int)Math.round(rect.y/TRGame.GRID_CELL_SIDE));
+    public BoardPosition getCurrentPosition() {
+        return new BoardPosition((int)Math.round(rect.x/TRGame.GRID_CELL_SIDE), (int)Math.round(rect.y/TRGame.GRID_CELL_SIDE));
     }
 
     public boolean isMoving() {
@@ -90,7 +89,7 @@ public class ScreenObject {
     }
 
     public boolean canMove(Direction dir) {
-        Position currentPos = this.getCurrentPosition();
+        BoardPosition currentPos = this.getCurrentPosition();
         boolean result = true;
         switch (dir) {
             case UP:

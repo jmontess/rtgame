@@ -30,7 +30,7 @@ public class Enemy extends ScreenObject {
     private boolean alert = false;
     private Direction playerDirection = Direction.NONE;
 
-    public Enemy(TRGame game, Board board, Position pos) {
+    public Enemy(TRGame game, Board board, BoardPosition pos) {
 
         super(game, board, pos);
 
@@ -110,9 +110,9 @@ public class Enemy extends ScreenObject {
         super.move(finalDir);
     }
 
-    public void setPlayerPosition(Position playerPos) {
+    public void setPlayerPosition(BoardPosition playerPos) {
 
-        Position pos = getCurrentPosition();
+        BoardPosition pos = getCurrentPosition();
 
         if (pos.distanceTo(playerPos) <= TRGame.ENEMY_ALERT_RANGE) {
 

@@ -1,13 +1,11 @@
 package com.jms.trgame;
 
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -81,13 +79,13 @@ public class GameScreen implements Screen {
         */
 
         // Creating player
-        Position playerPos = board.getRandomEmptyCell();
+        BoardPosition playerPos = board.getRandomEmptyCell();
         player = new Player(game, board, playerPos);
         //player.setTexture(TRGame.TEXTURE_GREEN_BOX_PATH);
         board.setEmpty(playerPos, false);
 
         // Creating enemy
-        Position enemyPos = board.getRandomEmptyCell();
+        BoardPosition enemyPos = board.getRandomEmptyCell();
         enemy = new Enemy(game, board, enemyPos);
         while (player.distanceTo(enemy) <= TRGame.ENEMY_ALERT_RANGE) {
             enemyPos = board.getRandomEmptyCell();
@@ -100,7 +98,7 @@ public class GameScreen implements Screen {
         // Creating cheese
         cheese = new ArrayList<ScreenObject>();
         for (int i = 0; i < 3; i++) {
-            Position cheesePos = board.getRandomEmptyCell();
+            BoardPosition cheesePos = board.getRandomEmptyCell();
             ScreenObject cheeseObj = new ScreenObject(game, board, cheesePos);
             cheeseObj.setTexture(getRandomCheeseTexturePath());
             cheese.add(cheeseObj);
@@ -335,8 +333,8 @@ public class GameScreen implements Screen {
                 touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
                 camera.unproject(touchPos);
 
-                Position touch = new Position(Math.round(touchPos.x / TRGame.GRID_CELL_SIDE), Math.round(touchPos.y / TRGame.GRID_CELL_SIDE));
-                Position playerPos = player.getCurrentPosition();
+                BoardPosition touch = new BoardPosition(Math.round(touchPos.x / TRGame.GRID_CELL_SIDE), Math.round(touchPos.y / TRGame.GRID_CELL_SIDE));
+                BoardPosition playerPos = player.getCurrentPosition();
                 Direction dir;
 
                 int xDif = touch.x - playerPos.x;
@@ -383,7 +381,7 @@ public class GameScreen implements Screen {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public Direction getRandomDirectionFrom(Position pos) {
+    public Direction getRandomDirectionFrom(BoardPosition pos) {
         List<Direction> availiableDirs = board.getAvailableDirections(pos);
         return availiableDirs.get(MathUtils.random(0, availiableDirs.size()-1));
     }

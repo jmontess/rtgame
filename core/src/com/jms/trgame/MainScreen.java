@@ -37,8 +37,8 @@ public class MainScreen implements Screen {
 
         board = new Board(game, TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE+1, TRGame.SCREEN_HEIGHT/TRGame.GRID_CELL_SIDE);
         board.setAllowLeave(true);
-        player = new Player(game, board, new Position(TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE+1, 1));
-        enemy = new Enemy(game, board, new Position(-1,1));
+        player = new Player(game, board, new BoardPosition(TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE+1, 1));
+        enemy = new Enemy(game, board, new BoardPosition(-1,1));
 
         player.rect.y -= TRGame.GRID_CELL_SIDE/2;
         enemy.rect.y -= TRGame.GRID_CELL_SIDE/2;
@@ -156,9 +156,9 @@ public class MainScreen implements Screen {
             enemy.move(Direction.LEFT);
         } else if (timer > 53) {
             // resetting everything
-            player.setPosition(new Position(TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE, 1));
+            player.setPosition(new BoardPosition(TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE, 1));
             player.rect.x += TRGame.GRID_CELL_SIDE/3;
-            enemy.setPosition(new Position(-1,1));
+            enemy.setPosition(new BoardPosition(-1,1));
             player.rect.y -= TRGame.GRID_CELL_SIDE/2;
             enemy.rect.y -= TRGame.GRID_CELL_SIDE/2;
             enemy.setAlert(false);

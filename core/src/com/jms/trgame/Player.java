@@ -31,7 +31,7 @@ public class Player extends ScreenObject {
     private float stateTime = 0.0f;
     private float idleChangeTime = 0.0f;
 
-    public Player(TRGame game, Board board, Position pos) {
+    public Player(TRGame game, Board board, BoardPosition pos) {
 
         super(game, board, pos);
 

@@ -74,11 +74,11 @@ public class Board {
         return result;
     }
 
-    public boolean isEmpty(Position pos) {
+    public boolean isEmpty(BoardPosition pos) {
         return isEmpty(pos.x, pos.y);
     }
 
-    public void setEmpty(Position pos, boolean empty) {
+    public void setEmpty(BoardPosition pos, boolean empty) {
         if (pos.x < width && pos.y < height)
             boardMap[pos.x][pos.y] = empty;
 
@@ -89,31 +89,31 @@ public class Board {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public List<Position> getEmptyCells() {
-        List<Position> result = new ArrayList<Position>();
+    public List<BoardPosition> getEmptyCells() {
+        List<BoardPosition> result = new ArrayList<BoardPosition>();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 if (boardMap[i][j])
-                    result.add(new Position(i,j));
+                    result.add(new BoardPosition(i,j));
             }
         }
         return result;
     }
 
-    public List<Position> getOccupiedCells() {
-        List<Position> result = new ArrayList<Position>();
+    public List<BoardPosition> getOccupiedCells() {
+        List<BoardPosition> result = new ArrayList<BoardPosition>();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 if (!boardMap[i][j])
-                    result.add(new Position(i,j));
+                    result.add(new BoardPosition(i,j));
             }
         }
         return result;
     }
 
-    public Position getRandomEmptyCell() {
-        List<Position> emptyCells = getEmptyCells();
-        Position result = null;
+    public BoardPosition getRandomEmptyCell() {
+        List<BoardPosition> emptyCells = getEmptyCells();
+        BoardPosition result = null;
         if (emptyCells.size() > 0)
             result = emptyCells.get(MathUtils.random(0,emptyCells.size()-1));
         return result;
@@ -121,7 +121,7 @@ public class Board {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public List<Direction> getAvailableDirections(Position pos) {
+    public List<Direction> getAvailableDirections(BoardPosition pos) {
         List<Direction> result = new ArrayList<Direction>();
         if (isEmpty(pos.x,pos.y+1)) result.add(Direction.UP);
         if (isEmpty(pos.x,pos.y-1)) result.add(Direction.DOWN);
@@ -134,7 +134,7 @@ public class Board {
     // -----------------------------------------------------------------------------------------------------------------
 
     public void draw() {
-        for (Position pos : getOccupiedCells()) {
+        for (BoardPosition pos : getOccupiedCells()) {
             //System.out.println(pos);
             game.getSpriteBatch().draw(obstacleTexture, pos.x*TRGame.GRID_CELL_SIDE, pos.y*TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE);
         }
