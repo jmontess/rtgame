@@ -2,122 +2,294 @@ package com.jms.trgame;
 
 import com.badlogic.gdx.math.MathUtils;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 /**
  * Created by jmontes on 8/12/16.
  */
-public class MazeGenerator {
+public class MazeGenerator {  private int dimensionX, dimensionY; // dimension of maze
+    private int gridDimensionX, gridDimensionY; // dimension of output grid
+    private char[][] grid; // output grid
+    private Cell[][] cells; // 2d array of Cells
+    private Random random = new Random(); // The random object
 
-    private int n;                 // dimension of maze
-    private boolean[][] north;     // is there a wall to north of cell i, j
-    private boolean[][] east;
-    private boolean[][] south;
-    private boolean[][] west;
-    private boolean[][] visited;
-
-    public MazeGenerator(int n) {
-        this.n = n;
-
-        // initialize border cells as already visited
-        visited = new boolean[n+2][n+2];
-        for (int x = 0; x < n+2; x++) {
-            visited[x][0] = true;
-            visited[x][n+1] = true;
-        }
-        for (int y = 0; y < n+2; y++) {
-            visited[0][y] = true;
-            visited[n+1][y] = true;
-        }
-
-
-        // initialze all walls as present
-        north = new boolean[n+2][n+2];
-        east  = new boolean[n+2][n+2];
-        south = new boolean[n+2][n+2];
-        west  = new boolean[n+2][n+2];
-        for (int x = 0; x < n+2; x++) {
-            for (int y = 0; y < n+2; y++) {
-                north[x][y] = true;
-                east[x][y]  = true;
-                south[x][y] = true;
-                west[x][y]  = true;
-            }
-        }
-
-        generate();
+    // initialize with x and y the same
+    public MazeGenerator(int aDimension) {
+        // Initialize
+        this(aDimension, aDimension);
+    }
+    // constructor
+    public MazeGenerator(int xDimension, int yDimension) {
+        dimensionX = xDimension;
+        dimensionY = yDimension;
+        gridDimensionX = xDimension * 4 + 1;
+        gridDimensionY = yDimension * 2 + 1;
+        grid = new char[gridDimensionX][gridDimensionY];
+        init();
+        generateMaze();
     }
 
-    // generate the maze starting from lower left
-    private void generate() {
-        generate(1, 1);
-    }
-
-    private void generate(int x, int y) {
-
-        visited[x][y] = true;
-
-        // while there is an unvisited neighbor
-        while (!visited[x][y+1] || !visited[x+1][y] || !visited[x][y-1] || !visited[x-1][y]) {
-
-            // pick random neighbor (could use Knuth's trick instead)
-            while (true) {
-                double r = MathUtils.random(0,3);
-                if (r == 0 && !visited[x][y+1]) {
-                    north[x][y] = false;
-                    south[x][y+1] = false;
-                    generate(x, y + 1);
-                    break;
-                }
-                else if (r == 1 && !visited[x+1][y]) {
-                    east[x][y] = false;
-                    west[x+1][y] = false;
-                    generate(x+1, y);
-                    break;
-                }
-                else if (r == 2 && !visited[x][y-1]) {
-                    south[x][y] = false;
-                    north[x][y-1] = false;
-                    generate(x, y-1);
-                    break;
-                }
-                else if (r == 3 && !visited[x-1][y]) {
-                    west[x][y] = false;
-                    east[x-1][y] = false;
-                    generate(x-1, y);
-                    break;
-                }
+    private void init() {
+        // create cells
+        cells = new Cell[dimensionX][dimensionY];
+        for (int x = 0; x < dimensionX; x++) {
+            for (int y = 0; y < dimensionY; y++) {
+                cells[x][y] = new Cell(x, y, false); // create cell (see Cell constructor)
             }
         }
     }
 
-    public void print() {
+    // inner class to represent a cell
+    private class Cell {
+        int x, y; // coordinates
+        // cells this cell is connected to
+        ArrayList<Cell> neighbors = new ArrayList<Cell>();
+        // solver: if already used
+        boolean visited = false;
+        // solver: the Cell before this one in the path
+        Cell parent = null;
+        // solver: if used in last attempt to solve path
+        boolean inPath = false;
+        // solver: distance travelled this far
+        double travelled;
+        // solver: projected distance to end
+        double projectedDist;
+        // impassable cell
+        boolean wall = true;
+        // if true, has yet to be used in generation
+        boolean open = true;
+        // construct Cell at x, y
+        Cell(int x, int y) {
+            this(x, y, true);
+        }
+        // construct Cell at x, y and with whether it isWall
+        Cell(int x, int y, boolean isWall) {
+            this.x = x;
+            this.y = y;
+            this.wall = isWall;
+        }
+        // add a neighbor to this cell, and this cell as a neighbor to the other
+        void addNeighbor(Cell other) {
+            if (!this.neighbors.contains(other)) { // avoid duplicates
+                this.neighbors.add(other);
+            }
+            if (!other.neighbors.contains(this)) { // avoid duplicates
+                other.neighbors.add(this);
+            }
+        }
+        // used in updateGrid()
+        boolean isCellBelowNeighbor() {
+            return this.neighbors.contains(new Cell(this.x, this.y + 1));
+        }
+        // used in updateGrid()
+        boolean isCellRightNeighbor() {
+            return this.neighbors.contains(new Cell(this.x + 1, this.y));
+        }
+        // useful Cell representation
+        @Override
+        public String toString() {
+            return String.format("Cell(%s, %s)", x, y);
+        }
+        // useful Cell equivalence
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof Cell)) return false;
+            Cell otherCell = (Cell) other;
+            return (this.x == otherCell.x && this.y == otherCell.y);
+        }
+        // should be overridden with equals
+        @Override
+        public int hashCode() {
+            // random hash code method designed to be usually unique
+            return this.x + this.y * 256;
+        }
+    }
+    // generate from upper left (In computing the y increases down often)
+    private void generateMaze() {
+        generateMaze(0, 0);
+    }
+    // generate the maze from coordinates x, y
+    private void generateMaze(int x, int y) {
+        generateMaze(getCell(x, y)); // generate from Cell
+    }
+    private void generateMaze(Cell startAt) {
+        // don't generate from cell not there
+        if (startAt == null) return;
+        startAt.open = false; // indicate cell closed for generation
+        ArrayList<Cell> cells = new ArrayList<Cell>();
+        cells.add(startAt);
 
-        boolean[][] m = new boolean[n*2][n*2];
-        for (int i = 0; i < n*2; i++) {
-            for (int j = 0; j< n*2; j++) {
-                m[i][j] = false;
+        while (!cells.isEmpty()) {
+            Cell cell;
+            // this is to reduce but not completely eliminate the number
+            //   of long twisting halls with short easy to detect branches
+            //   which results in easy mazes
+            if (random.nextInt(10)==0)
+                cell = cells.remove(random.nextInt(cells.size()));
+            else cell = cells.remove(cells.size() - 1);
+            // for collection
+            ArrayList<Cell> neighbors = new ArrayList<Cell>();
+            // cells that could potentially be neighbors
+            Cell[] potentialNeighbors = new Cell[]{
+                    getCell(cell.x + 1, cell.y),
+                    getCell(cell.x, cell.y + 1),
+                    getCell(cell.x - 1, cell.y),
+                    getCell(cell.x, cell.y - 1)
+            };
+            for (Cell other : potentialNeighbors) {
+                // skip if outside, is a wall or is not opened
+                if (other==null || other.wall || !other.open) continue;
+                neighbors.add(other);
             }
+            if (neighbors.isEmpty()) continue;
+            // get random cell
+            Cell selected = neighbors.get(random.nextInt(neighbors.size()));
+            // add as neighbor
+            selected.open = false; // indicate cell closed for generation
+            cell.addNeighbor(selected);
+            cells.add(cell);
+            cells.add(selected);
         }
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j< n; j++) {
-                int pi = i*2, pj = j*2;
-                if (north[i][j]) m[pi][pj]   = true;
-                if (south[i][j]) m[pi+1][pj] = true;
-                if (east[i][j])  m[pi][pj]   = true;
-                if (west[i][j])  m[pi][pj+1] = true;
-            }
+    }
+    // used to get a Cell at x, y; returns null out of bounds
+    public Cell getCell(int x, int y) {
+        try {
+            return cells[x][y];
+        } catch (ArrayIndexOutOfBoundsException e) { // catch out of bounds
+            return null;
         }
-
-        System.out.println("*************************************");
-        for (int i = n*2-1; i >= 0; i--) {
-            System.out.print("*");
-            for (int j = 0; j< n*2; j++) {
-                char c = ' ';
-                if (m[i][j]) c = '*';
-                System.out.print(c);
-            }
-            System.out.print("*\n");
-        }
-        System.out.println("*************************************");
     }
 
+    // get the projected distance
+    // (A star algorithm consistent)
+    public double getProjectedDistance(Cell current, double travelled, Cell end) {
+        return travelled + Math.abs(current.x - end.x) +
+                Math.abs(current.y - current.x);
+    }
+
+    // draw the maze
+    public void updateGrid() {
+        char backChar = ' ', wallChar = 'X', cellChar = ' ', pathChar = '*';
+        // fill background
+        for (int x = 0; x < gridDimensionX; x ++) {
+            for (int y = 0; y < gridDimensionY; y ++) {
+                grid[x][y] = backChar;
+            }
+        }
+        // build walls
+        for (int x = 0; x < gridDimensionX; x ++) {
+            for (int y = 0; y < gridDimensionY; y ++) {
+                if (x % 4 == 0 || y % 2 == 0)
+                    grid[x][y] = wallChar;
+            }
+        }
+        // make meaningful representation
+        for (int x = 0; x < dimensionX; x++) {
+            for (int y = 0; y < dimensionY; y++) {
+                Cell current = getCell(x, y);
+                int gridX = x * 4 + 2, gridY = y * 2 + 1;
+                if (current.inPath) {
+                    grid[gridX][gridY] = pathChar;
+                    if (current.isCellBelowNeighbor())
+                        if (getCell(x, y + 1).inPath) {
+                            grid[gridX][gridY + 1] = pathChar;
+                            grid[gridX + 1][gridY + 1] = backChar;
+                            grid[gridX - 1][gridY + 1] = backChar;
+                        } else {
+                            grid[gridX][gridY + 1] = cellChar;
+                            grid[gridX + 1][gridY + 1] = backChar;
+                            grid[gridX - 1][gridY + 1] = backChar;
+                        }
+                    if (current.isCellRightNeighbor())
+                        if (getCell(x + 1, y).inPath) {
+                            grid[gridX + 2][gridY] = pathChar;
+                            grid[gridX + 1][gridY] = pathChar;
+                            grid[gridX + 3][gridY] = pathChar;
+                        } else {
+                            grid[gridX + 2][gridY] = cellChar;
+                            grid[gridX + 1][gridY] = cellChar;
+                            grid[gridX + 3][gridY] = cellChar;
+                        }
+                } else {
+                    grid[gridX][gridY] = cellChar;
+                    if (current.isCellBelowNeighbor()) {
+                        grid[gridX][gridY + 1] = cellChar;
+                        grid[gridX + 1][gridY + 1] = backChar;
+                        grid[gridX - 1][gridY + 1] = backChar;
+                    }
+                    if (current.isCellRightNeighbor()) {
+                        grid[gridX + 2][gridY] = cellChar;
+                        grid[gridX + 1][gridY] = cellChar;
+                        grid[gridX + 3][gridY] = cellChar;
+                    }
+                }
+            }
+        }
+    }
+
+    // simply prints the map
+    public void draw() {
+        System.out.print(this);
+    }
+    // forms a meaningful representation
+    @Override
+    public String toString() {
+        updateGrid();
+        String output = "";
+        for (int y = 0; y < gridDimensionY; y++) {
+            for (int x = 0; x < gridDimensionX; x++) {
+                output += grid[x][y];
+            }
+            output += "\n";
+        }
+        return output;
+    }
+
+    public Board generateBoard(TRGame game, int level) {
+
+        //System.out.println(gridDimensionX/2);
+        //System.out.println(gridDimensionY);
+        boolean[][] map = new boolean[gridDimensionX/2][gridDimensionY];
+        updateGrid();
+        for (int y = 1; y < gridDimensionY; y++) {
+            //String output = "";
+            for (int x = 1; x < gridDimensionX/2; x++) {
+                if (grid[x*2][y] == ' ') {
+                    map[x][y] = true;
+                } else {
+                    map[x][y] = false;
+                }
+                //output += grid[x*2][y];
+            }
+            //System.out.println(output);
+        }
+
+        boolean[][] finalMap = new boolean[gridDimensionX/2][gridDimensionY];
+        float obtacleProbability = TRGame.BASE_OBSTACLE_PROBABILITY +
+                (1-TRGame.BASE_OBSTACLE_PROBABILITY)*((float)Math.min(level, TRGame.MAX_LEVEL))/TRGame.MAX_LEVEL;
+
+        for (int i = 0; i < finalMap.length; i++) {
+            for (int j = 2; j < finalMap[0].length+1; j++) {
+
+                boolean cellValue = map[i][map[0].length - j];
+
+                if (!cellValue && (MathUtils.random(0f,1f) > obtacleProbability)) {
+                    cellValue = true;
+                }
+
+                finalMap[i][j-2] = cellValue;
+            }
+        }
+
+        for (int i = 0; i < finalMap.length; i++) {
+            finalMap[i][gridDimensionY-2] = true;
+        }
+
+        //System.out.println(this.toString());
+
+        Board board = new Board(game, gridDimensionX/2, gridDimensionY);
+        board.boardMap = finalMap;
+        return board;
+    }
 }

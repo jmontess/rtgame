@@ -16,7 +16,7 @@ public class Board {
 
     TRGame game;
 
-    boolean[][] boardMap;
+    public boolean[][] boardMap;
     int width;
     int height;
 
@@ -81,6 +81,10 @@ public class Board {
     public void setEmpty(Position pos, boolean empty) {
         if (pos.x < width && pos.y < height)
             boardMap[pos.x][pos.y] = empty;
+
+        if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y > height) {
+            System.out.println("Ojo: "+pos);
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -131,8 +135,11 @@ public class Board {
 
     public void draw() {
         for (Position pos : getOccupiedCells()) {
+            //System.out.println(pos);
             game.getSpriteBatch().draw(obstacleTexture, pos.x*TRGame.GRID_CELL_SIDE, pos.y*TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE, TRGame.GRID_CELL_SIDE);
         }
+        //System.out.println(getOccupiedCells().size());
+        //System.exit(-1);
     }
 
     public void dispose() {

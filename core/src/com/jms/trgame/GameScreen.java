@@ -38,6 +38,7 @@ public class GameScreen implements Screen {
     private int score;
     private int numCheese;
     private float timer;
+    private int gameLevel;
 
     private enum GameStatus {
         PLAYING, FINISHED, OVER
@@ -57,23 +58,27 @@ public class GameScreen implements Screen {
         camera.setToOrtho(false, TRGame.SCREEN_WIDTH, TRGame.SCREEN_HEIGHT);
 
         // Initializing game;
-        init(0);
+        init(0, 0);
     }
 
-    private void init(int initialScore) {
+    private void init(int initialScore, int level) {
 
         // Creating the board
-        board = new Board(game, TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE, TRGame.SCREEN_HEIGHT/TRGame.GRID_CELL_SIDE);
+        //board = new Board(game, TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE, TRGame.SCREEN_HEIGHT/TRGame.GRID_CELL_SIDE);
+        MazeGenerator mg = new MazeGenerator(TRGame.SCREEN_WIDTH/TRGame.GRID_CELL_SIDE/2, TRGame.SCREEN_HEIGHT/TRGame.GRID_CELL_SIDE/2);
+        board = mg.generateBoard(game, level);
 
         // Loading textures
         floorTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_FLOOR_PATH));
         veilTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_VEIL_PATH));
         cheeseTexture = new Texture(Gdx.files.internal(TRGame.TEXTURE_CHEESE_PATHS[0]));
 
+        /*
         // Creating obstacles
         for (int i = 0; i < 10; i++) {
             board.setEmpty(board.getRandomEmptyCell(), false);
         }
+        */
 
         // Creating player
         Position playerPos = board.getRandomEmptyCell();
@@ -84,6 +89,11 @@ public class GameScreen implements Screen {
         // Creating enemy
         Position enemyPos = board.getRandomEmptyCell();
         enemy = new Enemy(game, board, enemyPos);
+        while (player.distanceTo(enemy) <= TRGame.ENEMY_ALERT_RANGE) {
+            enemyPos = board.getRandomEmptyCell();
+            enemy.setPosition(enemyPos);
+        }
+
         //enemy.setTexture(TRGame.TEXTURE_RED_BOX_PATH);
         board.setEmpty(enemyPos, false);
 
@@ -114,6 +124,9 @@ public class GameScreen implements Screen {
         numCheese = 0;
         timer = 0;
         gameStatus = GameStatus.PLAYING;
+        gameLevel = level;
+
+        //System.out.println("--->"+board.getOccupiedCells().size());
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -362,7 +375,7 @@ public class GameScreen implements Screen {
                     game.gameScreen = null;
                     this.dispose();
                 } else {
-                    this.init(score);
+                    this.init(score, gameLevel+1);
                 }
             }
         }

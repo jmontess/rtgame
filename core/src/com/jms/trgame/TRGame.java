@@ -86,6 +86,9 @@ public class TRGame extends Game {
 
     public static final int CHEESE_SCORE = 10;
 
+    public static final float BASE_OBSTACLE_PROBABILITY = 1/3f;
+    public static final int MAX_LEVEL = 10;
+
     // -----------------------------------------------------------------------------------------------------------------
 
     private SpriteBatch spriteBatch;
