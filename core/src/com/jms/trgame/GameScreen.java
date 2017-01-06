@@ -147,7 +147,7 @@ public class GameScreen implements Screen {
         checkCheese();
 
         // Check if the player is caught
-        chechCaught();;
+        chechCaught();
 
         // Draw the screen
         game.getSpriteBatch().begin();
@@ -305,7 +305,7 @@ public class GameScreen implements Screen {
             enemy.freeze(true);
             player.freeze(true);
             gameStatus = GameStatus.FINISHED;
-            timer = 2;
+            timer = 0.5f;
         }
     }
 

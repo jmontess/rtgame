@@ -73,8 +73,8 @@ public class TRGame extends Game {
 
     public static final String TEXTURE_ROCK_PATH = "rock.png";
 
-    public static final String SOUND_BITE_PATH = "sounds/bite.mp3";
-    public static final String SOUND_OUCH_PATH = "sounds/ouch.mp3";
+    public static final String SOUND_BITE_PATH = "sounds/crunch.wav";
+    public static final String SOUND_OUCH_PATH = "sounds/gameover.wav";
 
     public static final int OBJECT_SPEED = 150*SCREEN_SCALE;
     public static final int ENEMY_SPEED = 75*SCREEN_SCALE;
